@@ -1,9 +1,18 @@
+function onInstall(e) {
+
+  onOpen(e);
+}
+
 function onOpen(e) {
+	// add-on code
 	ui = SpreadsheetApp.getUi();
-	ui.createMenu('Mail Merge')
-	.addItem("Create PDF And Send",'createAndSend')
-	.addSeparator()
-	.addItem('Send Test Email','sendTestEmail')
-	.addItem("Help",'help')
+	ui.createAddonMenu()
+	.addItem("Open Sidebar",'openSidebar')
 	.addToUi();
+
+	//container bound code
+	// ui = SpreadsheetApp.getUi();
+	// ui.createMenu('Mail Merge')
+	// .addItem("Open Sidebar",'openSidebar')
+	// .addToUi();
 }

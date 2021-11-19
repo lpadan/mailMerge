@@ -1,0 +1,435 @@
+<?
+
+var documentTemplateUrl = data.documentTemplateUrl;
+var pdfFolderUrl = data.pdfFolderUrl;
+var tempFolderUrl = data.tempFolderUrl;
+var pdfFileName = data.pdfFileName;
+var emailToColName = data.emailToColName;
+var emailSubject = data.emailSubject;
+var emailBodyHtml = data.emailBodyHtml;
+var emailBodyText = data.emailBodyText;
+
+if (emailBodyHtml.length) {
+	var emailBody = emailBodyHtml;
+	var type = 'html';
+} else if (emailBodyText.length) {
+	var emailBody = emailBodyText.replace(/\n/g,"<br>");
+	var type = 'text';
+} else {
+	var emailBody = '';
+	var type = 'text';
+}
+
+?>
+
+
+<!DOCTYPE html>
+<html>
+  
+<head>
+	<base target="_top">
+	<link href='https://fonts.googleapis.com/css?family=Open+Sans:400italic,700italic,400,700,300&amp;subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/css/materialize.min.css">
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+	<?!=include('sidebar.css');?>
+</head>
+
+<style>
+	table {
+		border-collapse:unset!important
+	}
+</style>
+
+<body>
+
+<ul id="slide-out" class="sidenav">
+	<div id="closeMenu">
+		<a id="closeMenu" href="javascript:void(0)"><i style="margin:8px 0 0 12px;color:white" class="material-icons">menu</i></a>
+	</div>
+
+	<div class="menu-header">
+		<h5 style="color:white;display:inline-block;margin:10px;font-size:1.3em">Menu</h5>
+	</div>
+
+	<li><a id="mergeAndEmailLink" href="javascript:void(0)"><i class="material-icons">launch</i>Merge and Email</a></li>
+	<li><a id="documentSettingsLink" href="javascript:void(0)"><i class="material-icons">settings</i>Document Settings</a></li>
+	<li><a id="emailSettingsLink" href="javascript:void(0)"><i class="material-icons">settings</i>Email Settings</a></li>
+	<li><div class="divider"></div></li>
+	<li><a href="https://paperlessofficepro.com/addons/scheduleMaker/help" target="_blank"><i class="material-icons">help_outline</i>Help</a></li>
+</ul>
+
+<div id="menu-icon">
+
+	<a href="javascript:void(0)" data-target="slide-out" class="sidenav-trigger"><i style="margin:8px 0 0 12px;color:white" class="material-icons">menu</i></a>
+</div>
+
+<div id="mergeAndEmail" class="link" style="margin-top:0px">
+
+	<div style="background-color:#4285f4;padding:0;text-align:center" class="header">
+		<h5 style="color:white;display:inline-block;margin:10px;font-size:1.3em">Merge and Email</h5>
+	</div>
+
+	<div style="padding:0 15px;margin-top:50px">
+
+		<br>
+
+		<div class="shadowBox">
+
+			<form id="form1">
+
+				<div style="margin-top:15px">
+
+					<div class="input-field">
+						<select id="selectDataSource" class="domainNameSelect">
+							<option selected disabled>Select Data Source</option>
+							<option>Data Tab</option>
+							<option>Test Data Tab</option>
+						</select>
+						<label>Data Source</label>
+					</div>
+
+
+					<div style="margin-top:10px">
+						<label>
+							<input id="createPdfFiles" type="checkbox" name="createPdfFiles" checked>
+							<span>Create PDF Files</span>
+						</label>
+					</div>
+
+					<div id="savePdfFilesDiv" style="margin-top:10px">
+						<label>
+							<input id="savePdfFiles" type="checkbox" name="savePdfFiles" checked>
+							<span>Save PDF Files to Drive</span>
+						</label>
+					</div>
+
+					<div style="margin-top:10px">
+						<label>
+							<input id="sendEmails" type="checkbox" name="sendEmails" checked>
+							<span>Send Emails</span>
+						</label>
+					</div>
+
+					<div id="includePdfAttachmentDiv" style="margin-top:10px">
+						<label>
+							<input id="includePdfAttachment" type="checkbox" name="includePdfAttachment" checked>
+							<span>Include PDF attachment</span>
+						</label>
+					</div>
+				</div>
+
+			</form>
+
+		</div>
+
+		<div style="margin:20px 0 20px 0;text-align:center">
+			<button id="createAndSaveRunBtn" class="waves-effect waves-light btn btn-small" style="min-width:80px">Run</button>
+		</div>
+
+	</div>
+</div>
+
+<div id="documentSettings" style="display:none;margin-top:60px" class="link">
+
+	<div style="background-color:#4285f4;padding:0;text-align:center" class="header">
+		<h5 style="color:white;display:inline-block;margin:10px;font-size:1.3em">Document Settings</h5>
+	</div>
+
+	<div style="padding:0 15px">
+
+		<h5>Document Template URL</h5>
+
+		<div class="shadowBox">
+
+			<div id="documentTemplateUrlDiv" style="margin-top:20px;width:100%">
+				<?
+
+				if (!documentTemplateUrl) { ?>
+					<span id="documentTemplateUrlSpan" style="text-align: center;overflow:scroll;display:inline-block;font-size:16px;width:100%;white-space:nowrap;height:35px">[] no url ]</span><?
+				} else { ?>
+					<span id="documentTemplateUrlSpan" style="overflow:scroll;display:inline-block;font-size:16px;width:100%;white-space:nowrap;height:35px"><?=documentTemplateUrl;?></span><?
+				} ?>
+			</div>
+
+			<div id="editDocumentTemplateUrlDiv" class="input-field" style="margin-top:20px;display:none">
+				<input id="editDocumentTemplateUrlInput" name="editDocumentTemplateUrlInput" type="text">
+				<label for="editDocumentTemplateUrlInput">Document Template URL</label>
+			</div>
+
+			<div style="margin:0;text-align:center">
+				<button id="editDocumentTemplateUrlBtn" class="waves-effect waves-light btn btn-small">Edit</button>
+				<button id="cancelDocumentTemplateUrlBtn" class="btn btn-flat" style="display:none">Cancel</button>
+				<button id="saveDocumentTemplateUrlBtn" class="waves-effect waves-light btn btn-small" style="display:none">Save</button>
+			</div>
+		</div>
+
+		<h5 style="margin-top:30px">PDF Folder URL</h5>
+
+		<div class="shadowBox">
+
+			<div id="pdfFolderUrlDiv" style="margin-top:20px;width:100%">
+
+				<?
+				if (!pdfFolderUrl) { ?>
+					<span id="pdfFolderUrlSpan" style="text-align: center;overflow:scroll;display:inline-block;font-size:16px;width:100%;white-space:nowrap;height:35px">[ no url ]</span><?
+				} else { ?>
+					<span id="pdfFolderUrlSpan" style="overflow:scroll;display:inline-block;font-size:16px;width:100%;white-space:nowrap;height:35px"><?=pdfFolderUrl;?></span><?
+				} ?>
+
+			</div>
+
+			<div id="editPdfFolderUrlDiv" class="input-field" style="margin-top:20px;display:none">
+				<input id="editPdfFolderUrlInput" name="editPdfFolderUrlInput" type="text">
+				<label for="editPdfFolderUrlInput">PDF Folder URL</label>
+			</div>
+
+			<div style="margin:0;text-align:center">
+				<button id="editPdfFolderUrlBtn" class="waves-effect waves-light btn btn-small">Edit</button>
+				<button id="cancelPdfFolderUrlBtn" class="btn btn-flat" style="display:none">Cancel</button>
+				<button id="savePdfFolderUrlBtn" class="waves-effect waves-light btn btn-small" style="display:none">Save</button>
+			</div>
+		</div>
+
+		<h5 style="margin-top:30px">Temp Folder URL</h5>
+		<div class="shadowBox">
+
+			<div id="tempFolderUrlDiv" style="margin-top:20px;width:100%">
+
+				<?
+				if (!tempFolderUrl) { ?>
+					<span id="tempFolderUrlSpan" style="text-align: center;overflow:scroll;display:inline-block;font-size:16px;width:100%;white-space:nowrap;height:35px">[ no url ]</span><?
+				} else { ?>
+					<span id="tempFolderUrlSpan" style="overflow:scroll;display:inline-block;font-size:16px;width:100%;white-space:nowrap;height:35px"><?=tempFolderUrl;?></span><?
+				} ?>
+
+			</div>
+
+			<div id="editTempFolderUrlDiv" class="input-field" style="margin-top:20px;display:none">
+				<input id="editTempFolderUrlInput" name="editTempFolderUrlInput" type="text">
+				<label for="editTempFolderUrlInput">Temp Folder URL</label>
+			</div>
+
+			<div style="margin:0;text-align:center">
+				<button id="editTempFolderUrlBtn" class="waves-effect waves-light btn btn-small">Edit</button>
+				<button id="cancelTempFolderUrlBtn" class="btn btn-flat" style="display:none">Cancel</button>
+				<button id="saveTempFolderUrlBtn" class="waves-effect waves-light btn btn-small" style="display:none">Save</button>
+			</div>
+		</div>
+
+		<h5 style="margin-top:30px">PDF File Name</h5>
+		<div class="shadowBox">
+
+			<div id="pdfFileNameDiv" style="margin-top:20px;width:100%">
+
+				<?
+				if (!pdfFileName) { ?>
+					<span id="pdfFileNameSpan" style="text-align: center;overflow:scroll;display:inline-block;font-size:16px;width:100%;white-space:nowrap;height:35px">[ no file name ]</span><?
+				} else { ?>
+					<span id="pdfFileNameSpan" style="overflow:scroll;display:inline-block;font-size:16px;width:100%;white-space:nowrap;height:35px"><?=pdfFileName;?></span><?
+				} ?>
+
+			</div>
+
+			<div id="editPdfFileNameDiv" class="input-field" style="margin-top:20px;display:none">
+				<input id="editPdfFileNameInput" name="editPdfFileNameInput" type="text">
+				<label for="editPdfFileNameInput">PDF File Name</label>
+			</div>
+
+			<div style="margin:0;text-align:center">
+				<button id="editPdfFileNameBtn" class="waves-effect waves-light btn btn-small">Edit</button>
+				<button id="cancelPdfFileNameBtn" class="btn btn-flat" style="display:none">Cancel</button>
+				<button id="savePdfFileNameBtn" class="waves-effect waves-light btn btn-small" style="display:none">Save</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div id="emailSettings" style="display:none;margin-top:60px" class="link">
+
+	<div style="background-color:#4285f4;padding:0;text-align:center" class="header">
+		<h5 style="color:white;display:inline-block;margin:10px;font-size:1.3em">Email Settings</h5>
+	</div>
+
+	<div style="padding:0 15px">
+
+		<h5>To: &lt;column name&gt;</h5>
+		<div class="shadowBox">
+
+			<div id="emailToColNameDiv" style="margin-top:20px;width:100%">
+
+				<?
+
+				if (!emailToColName) { ?>
+					<span id="emailToColNameSpan" style="margin-bottom: 5px;background-color: #e6ffe6;padding: 10px;line-height: 16px;height: 36px;text-align: center;overflow:scroll;display:block;font-size:16px;width:100%;white-space:nowrap;height:35px">[ no column name ]</span><?
+				} else { ?>
+					<span id="emailToColNameSpan" style="margin-bottom: 5px;background-color: #e6ffe6;padding: 10px;line-height: 16px;height: 36px;overflow:scroll;display:block;font-size:16px;width:100%;white-space:nowrap;height:35px"><?=emailToColName;?></span><?
+				} ?>
+
+			</div>
+
+			<div id="editEmailToColNameDiv" class="input-field" style="margin-top:20px;display:none">
+				<input id="editEmailToColNameInput" name="editEmailToColNameInput" type="text">
+				<label for="editEmailToColNameInput">To: &lt;column name&gt;</label>
+			</div>
+
+			<div style="margin-top: 10px;text-align:center">
+				<button id="editEmailToColNameBtn" class="waves-effect waves-light btn btn-small">Edit</button>
+				<button id="cancelEmailToColNameBtn" class="btn btn-flat" style="display:none">Cancel</button>
+				<button id="saveEmailToColNameBtn" class="waves-effect waves-light btn btn-small" style="display:none">Save</button>
+			</div>
+		</div>
+
+		<h5 style="margin-top:30px">Subject</h5>
+		<div class="shadowBox">
+
+			<div id="emailSubjectDiv" style="margin-top:20px;width:100%">
+
+				<?
+				if (!emailSubject) { ?>
+					<span id="emailSubjectSpan" style="margin-bottom: 5px;background-color: #e6ffe6;padding: 10px;line-height: 16px;height: 36px;text-align: center;overflow:scroll;display:inline-block;font-size:16px;width:100%;white-space:nowrap;height:35px">[ no subject ]</span><?
+				} else { ?>
+					<span id="emailSubjectSpan" style="margin-bottom: 5px;background-color: #e6ffe6;padding: 10px;line-height: 16px;height: 36px;overflow:scroll;display:inline-block;font-size:16px;width:100%;white-space:nowrap;height:35px"><?=emailSubject;?></span><?
+				} ?>
+
+			</div>
+
+			<div id="editEmailSubjectDiv" class="input-field" style="margin-top:20px;display:none">
+				<input id="editEmailSubjectInput" name="editEmailSubjectInput" type="text">
+				<label for="editEmailSubjectInput">Subject</label>
+			</div>
+
+			<div style="margin-top: 10px;text-align:center">
+				<button id="editEmailSubjectBtn" class="waves-effect waves-light btn btn-small">Edit</button>
+				<button id="cancelEmailSubjectBtn" class="btn btn-flat" style="display:none">Cancel</button>
+				<button id="saveEmailSubjectBtn" class="waves-effect waves-light btn btn-small" style="display:none">Save</button>
+			</div>
+		</div>
+
+		<div style="margin:30px 0 .656rem 0">
+			<h5 style="display:inline;">Body</h5>
+
+					<?
+					if (type == 'html') { ?>
+						<label style="margin-left:15px">
+							<input name="emailType" type="radio" checked value="html" />
+							<span style="padding-left:25px">html</span>
+						</label>
+
+						<label>
+							<input name="emailType" type="radio" value="text" />
+							<span style="padding-left:25px">text</span>
+						</label> <?
+					} else if (type == 'text') { ?>
+						<label style="margin-left:15px">
+							<input name="emailType" type="radio" value="html" />
+							<span style="padding-left:25px">html</span>
+						</label>
+
+						<label>
+							<input name="emailType" type="radio" checked value="text" />
+							<span style="padding-left:25px">text</span>
+						</label> <?
+					}?>
+
+				<a id="largeFormat" style="cursor:pointer;margin-left:15px;color:#4285f4">large format</a>
+    </p>
+		</div>
+		<div class="shadowBox">
+
+			<div id="emailBodyDiv" style="margin-top:10px;width:100%">
+
+				<?
+				if (!emailBody) { ?>
+					<div id="emailBody" style="margin-bottom: 20px;text-align: center;height: 250px;overflow:scroll;display:block;font-size:16px;width:100%">[ no body ]</div><?
+				} else { ?>
+					<div id="emailBody" style="margin-bottom: 20px;height: 250px;overflow:scroll;display:block;font-size:16px;width:100%"><?!=emailBody;?></div><?
+				} ?>
+
+			</div>
+
+			<div id="editEmailBodyDiv" class="input-field" style="margin-top:20px;margin-bottom: 0;display:none">
+				<textarea id="editEmailBodyTextArea" style="min-height: 250px;max-height: 250px;padding-top: 0;margin-top: 10px;overflow:scroll" class="materialize-textarea" name="editEmailBodyTextArea"></textarea>
+				<label for="editEmailBodyTextArea">Body</label>
+			</div>
+
+			<div style="text-align:center">
+				<button id="editEmailBodyBtn" class="waves-effect waves-light btn btn-small">Edit</button>
+				<button id="cancelEmailBodyBtn" class="btn btn-flat" style="display:none">Cancel</button>
+				<button id="saveEmailBodyBtn" class="waves-effect waves-light btn btn-small" style="display:none">Save</button>
+			</div>
+
+		</div>
+		<br>
+
+	</div>
+</div>
+
+<div id="dialogModal" class="modal" >
+	<div class="modal-content">
+		<h5 style="margin-top:0;margin-bottom:20px">Heads up!</h5>
+		<p id="dialogMessage"></p>
+	</div>
+	<div class="modal-footer">
+		<a data-value="cancel" class="modal-close waves-effect waves-green btn-flat">Cancel</a>
+		<a id="okayBtn" class="modal-close waves-effect waves-green btn-flat">OK</a>
+	</div>
+
+	<div id="userInput" data-userinput="" hidden></div>
+</div>
+
+<div id="alertModal" class="modal" >
+	<div class="modal-content">
+		<h5 style="margin-top:0;margin-bottom:20px">Alert</h5>
+		<p id="alertMessage"></p>
+	</div>
+	<div class="modal-footer">
+		<a class="modal-close waves-effect waves-green btn-flat">Close</a>
+	</div>
+</div>
+
+<div id="noticeModal" class="modal" >
+	<div class="modal-content">
+		<h5 style="margin-top:0;margin-bottom:20px">Notice</h5>
+		<p id="noticeMessage"></p>
+	</div>
+	<div class="modal-footer">
+		<a class="modal-close waves-effect waves-green btn-flat">Close</a>
+	</div>
+</div>
+
+<div id="mask" style="display:none"></div>
+
+<div id="toast">
+    <img src="data:image/gif;base64,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">
+    <span>Working</span>
+</div>
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/js/materialize.min.js"></script>
+
+
+<script>
+var options = {
+		startingTop:'5%',
+		endingTop:'20%',
+		opacity:.3,
+		dismissable:true,
+	}
+var elem = document.getElementById('dialogModal');
+var elem2 = document.getElementById('alertModal');
+var elem3 = document.getElementById('noticeModal');
+var dialogModal = M.Modal.init(elem, options);
+var alertModal = M.Modal.init(elem2, options);
+var noticeModal = M.Modal.init(elem3, options);
+
+sessionStorage.setItem("emailBodyText","<?=emailBodyText;?>");
+sessionStorage.setItem("emailBodyHtml","<?=emailBodyHtml;?>");
+
+
+
+</script>
+
+<?!=include('sidebar.js');?>
+
+</body>
+</html>

@@ -1,0 +1,518 @@
+<script>
+
+$('#largeFormat').click(function() {
+	var type = $('input[name=emailType]:checked').val()
+	google.script.run.largeFormat(type);
+});
+
+
+$('#cancelEmailBodyBtn').click(function(){
+	$(this).hide();
+	$('#editEmailBodyBtn').show();
+	$('#saveEmailBodyBtn').hide();
+	$('#emailBodyDiv').show();
+	$('#editEmailBodyDiv').hide();
+	$('#mask').hide();
+	$('#toast').css('transform','');
+});
+
+$('#editEmailBodyBtn').click(function(){
+	var type = $('input[name=emailType]:checked').val();
+	$('#emailBodyDiv').hide();
+	$('#editEmailBodyDiv').show();
+	$('#saveEmailBodyBtn').show();
+	if ($('#emailBody').html() == '[ no body ]') {
+		$('#editEmailBodyTextArea').focus().val('');
+	} else {
+		var emailBody = $('#emailBody').html();
+		if (type == 'text') {
+			var emailBody = emailBody.replace(/<br>/g,"\n");
+		}
+		$('#editEmailBodyTextArea').focus().val(emailBody);
+	}
+	$('#editEmailBodyBtn').hide();
+	$('#cancelEmailBodyBtn').show();
+});
+
+$('#saveEmailBodyBtn').click(function() {
+	var data = {};
+	var type = $('input[name=emailType]:checked').val();
+	var emailBody = $('#editEmailBodyTextArea').val();
+	if (!emailBody && type == 'text') {
+		$('#alertMessage').text('Please provide body text');
+		alertModal.open();
+		return;
+	} else if (!emailBody && type == 'html') {
+		$('#alertMessage').text('Please provide body html');
+		alertModal.open();
+		return;
+	}
+	$('#mask').show();
+	$('#toast').css('transform','translateY(-60px)');
+	data.type = type;
+	data.emailBody = emailBody;
+	google.script.run.withSuccessHandler(successGetEmailTypes).getEmailTypes(data);
+});
+
+
+
+$('#cancelEmailSubjectBtn').click(function(){
+	$(this).hide();
+	$('#editEmailSubjectBtn').show();
+	$('#saveEmailSubjectBtn').hide();
+	$('#emailSubjectDiv').show();
+	$('#editEmailSubjectDiv').hide();
+});
+
+$('#editEmailSubjectBtn').click(function(){
+	$('#emailSubjectDiv').hide();
+	$('#editEmailSubjectDiv').show();
+	$('#saveEmailSubjectBtn').show();
+	if ($('#emailSubjectSpan').text() == '[ no subject ]') {
+		$('#editEmailSubjectInput').focus().val('');
+	} else {
+		$('#editEmailSubjectInput').focus().val($('#emailSubjectSpan').text());
+	}
+	$('#editEmailSubjectBtn').hide();
+	$('#cancelEmailSubjectBtn').show();
+});
+
+$('#saveEmailSubjectBtn').click(function() {
+	var subject = $('#editEmailSubjectInput').val();
+	if (!subject) {
+		$('#alertMessage').text('Please provide a subject');
+		alertModal.open();
+		return;
+	}
+	$('#mask').show();
+	$('#toast').css('transform','translateY(-60px)');
+	google.script.run.withSuccessHandler(successSaveEmailSubject).saveEmailSubject(subject);
+});
+
+
+
+$('#cancelEmailToColNameBtn').click(function(){
+	$(this).hide();
+	$('#editEmailToColNameBtn').show();
+	$('#saveEmailToColNameBtn').hide();
+	$('#emailToColNameDiv').show();
+	$('#editEmailToColNameDiv').hide();
+});
+
+$('#editEmailToColNameBtn').click(function(){
+	$('#emailToColNameDiv').hide();
+	$('#editEmailToColNameDiv').show();
+	$('#saveEmailToColNameBtn').show();
+	if ($('#emailToColNameSpan').text() == '[ no column name ]') {
+		$('#editEmailToColNameInput').focus().val('');
+	} else {
+		$('#editEmailToColNameInput').focus().val($('#emailToColNameSpan').text());
+	}
+	$('#editEmailToColNameBtn').hide();
+	$('#cancelEmailToColNameBtn').show();
+});
+
+$('#saveEmailToColNameBtn').click(function() {
+	var colName = $('#editEmailToColNameInput').val();
+	if (!colName) {
+		$('#alertMessage').text('Please provide a column name');
+		alertModal.open();
+		return;
+	}
+	$('#mask').show();
+	$('#toast').css('transform','translateY(-60px)');
+	google.script.run.withSuccessHandler(successSaveEmailToColName).saveEmailToColName(colName);
+});
+
+
+
+$('#cancelPdfFileNameBtn').click(function(){
+	$(this).hide();
+	$('#editPdfFileNameBtn').show();
+	$('#savePdfFileNameBtn').hide();
+	$('#pdfFileNameDiv').show();
+	$('#editPdfFileNameDiv').hide();
+});
+
+$('#editPdfFileNameBtn').click(function(){
+	$('#pdfFileNameDiv').hide();
+	$('#editPdfFileNameDiv').show();
+	$('#savePdfFileNameBtn').show();
+	if ($('#pdfFileNameSpan').text() == '[ no file name ]') {
+		$('#editPdfFileNameInput').focus().val('');
+	} else {
+		$('#editPdfFileNameInput').focus().val($('#pdfFileNameSpan').text());
+	}
+	$('#editPdfFileNameBtn').hide();
+	$('#cancelPdfFileNameBtn').show();
+});
+
+$('#savePdfFileNameBtn').click(function() {
+	var fileName = $('#editPdfFileNameInput').val();
+	if (!fileName) {
+		$('#alertMessage').text('Please provide a file name');
+		alertModal.open();
+		return;
+	}
+	$('#mask').show();
+	$('#toast').css('transform','translateY(-60px)');
+	google.script.run.withSuccessHandler(successSavePdfFileName).savePdfFileName(fileName);
+});
+
+
+
+$('#cancelTempFolderUrlBtn').click(function(){
+	$(this).hide();
+	$('#editTempFolderUrlBtn').show();
+	$('#saveTempFolderUrlBtn').hide();
+	$('#tempFolderUrlDiv').show();
+	$('#editTempFolderUrlDiv').hide();
+});
+
+$('#editTempFolderUrlBtn').click(function(){
+	$('#tempFolderUrlDiv').hide();
+	$('#editTempFolderUrlDiv').show();
+	$('#saveTempFolderUrlBtn').show();
+	if ($('#tempFolderUrlSpan').text() == '[ no url ]') {
+		$('#editTempFolderUrlInput').focus().val('');
+	} else {
+		$('#editTempFolderUrlInput').focus().val($('#tempFolderUrlSpan').text());
+	}
+	$('#editTempFolderUrlBtn').hide();
+	$('#cancelTempFolderUrlBtn').show();
+});
+
+$('#saveTempFolderUrlBtn').click(function() {
+	var url = $('#editTempFolderUrlInput').val();
+	if (!url) {
+		$('#alertMessage').text('Please provide a URL');
+		alertModal.open();
+		return;
+	}
+	$('#mask').show();
+	$('#toast').css('transform','translateY(-60px)');
+	google.script.run.withSuccessHandler(successSaveTempFolderUrl).saveTempFolderUrl(url);
+});
+
+
+
+$('#cancelPdfFolderUrlBtn').click(function(){
+	$(this).hide();
+	$('#editPdfFolderUrlBtn').show();
+	$('#savePdfFolderUrlBtn').hide();
+	$('#pdfFolderUrlDiv').show();
+	$('#editPdfFolderUrlDiv').hide();
+});
+
+$('#editPdfFolderUrlBtn').click(function(){
+	$('#pdfFolderUrlDiv').hide();
+	$('#editPdfFolderUrlDiv').show();
+	$('#savePdfFolderUrlBtn').show();
+	$('#editPdfFolderUrlInput').focus().val($('#pdfFolderUrlSpan').text());
+	$('#editPdfFolderUrlBtn').hide();
+	$('#cancelPdfFolderUrlBtn').show();
+});
+
+$('#savePdfFolderUrlBtn').click(function() {
+	var url = $('#editPdfFolderUrlInput').val();
+	if (!url) {
+		$('#alertMessage').text('Please provide a URL');
+		alertModal.open();
+		return;
+	}
+	$('#mask').show();
+	$('#toast').css('transform','translateY(-60px)');
+	google.script.run.withSuccessHandler(successSavePdfFolderUrl).savePdfFolderUrl(url);
+});
+
+
+
+$('#cancelDocumentTemplateUrlBtn').click(function(){
+	$(this).hide();
+	$('#editDocumentTemplateUrlBtn').show();
+	$('#saveDocumentTemplateUrlBtn').hide();
+	$('#documentTemplateUrlDiv').show();
+	$('#editDocumentTemplateUrlDiv').hide();
+});
+
+$('#editDocumentTemplateUrlBtn').click(function(){
+	$('#documentTemplateUrlDiv').hide();
+	$('#editDocumentTemplateUrlDiv').show();
+	$('#saveDocumentTemplateUrlBtn').show();
+	$('#editDocumentTemplateUrlInput').focus().val($('#documentTemplateUrlSpan').text());
+	$('#editDocumentTemplateUrlBtn').hide();
+	$('#cancelDocumentTemplateUrlBtn').show();
+});
+
+$('#saveDocumentTemplateUrlBtn').click(function() {
+	var url = $('#editDocumentTemplateUrlInput').val();
+	if (!url) {
+		$('#alertMessage').text('Please provide a URL');
+		alertModal.open();
+		return;
+	}
+	$('#mask').show();
+	$('#toast').css('transform','translateY(-60px)');
+	google.script.run.withSuccessHandler(successSaveDocumentTemplateUrl).saveDocumentTemplateUrl(url);
+});
+
+
+
+$('#documentSettingsLink').click(function(e){
+	e.preventDefault();
+	$('.link').hide();
+	$('#documentSettings').show();
+	$('.sidenav').sidenav('close');
+});
+
+$('#emailSettingsLink').click(function(e){
+	e.preventDefault();
+	$('.link').hide();
+	$('#emailSettings').show();
+	$('.sidenav').sidenav('close');
+});
+
+$('#mergeAndEmailLink').click(function(e){
+	e.preventDefault();
+	$('.link').hide();
+	$('#mergeAndEmail').show();
+	$('.sidenav').sidenav('close');
+});
+
+$('#sendEmails').change(function(){
+
+	if ($(this).prop("checked") == true) {
+		if ($('#createPdfFiles').prop("checked") == true) {
+			$('#includePdfAttachmentDiv').show();
+		} else {
+			$('#includePdfAttachmentDiv').hide();
+		}
+	} else {
+		$('#includePdfAttachmentDiv').hide();
+	}
+});
+
+$('#createPdfFiles').change(function(){
+	if ($(this).prop("checked") == true) {
+		$('#savePdfFilesDiv').show();
+		if ($('#sendEmails').prop("checked") == true) {
+			$('#includePdfAttachmentDiv').show();
+		} else {
+			$('#includePdfAttachmentDiv').hide();
+		}
+	} else {
+		$('#savePdfFilesDiv').hide();
+		$('#includePdfAttachmentDiv').hide();
+	}
+});
+
+$('select').formSelect();
+
+$('.sidenav').sidenav();
+
+$('#closeMenu').click(function(e){
+	e.preventDefault();
+	$('.sidenav').sidenav('close');
+});
+
+
+$('input[name=emailType]').change(function() {
+
+	var type = $(this).val();
+	if (type == 'text') {
+		var emailBodyText = sessionStorage.getItem('emailBodyText');
+		$('#editEmailBodyTextArea').val(emailBodyText).focus();
+		emailBodyText = emailBodyText.replace(/\n/g,'<br>');
+		$('#emailBody').html(emailBodyText);
+
+
+	} else if (type == 'html') {
+		var emailBodyHtml = sessionStorage.getItem('emailBodyHtml');
+		$('#editEmailBodyTextArea').val(emailBodyHtml).focus();
+		$('#emailBody').html(emailBodyHtml);
+	}
+
+});
+
+function successSaveDocumentTemplateUrl(data) {
+	if (data.success) {
+		$('#documentTemplateUrlSpan').text(data.url);
+		$('#editDocumentTemplateUrlDiv').hide();
+		$('#documentTemplateUrlDiv').show();
+		$('#cancelDocumentTemplateUrlBtn').hide();
+		$('#saveDocumentTemplateUrlBtn').hide();
+		$('#editDocumentTemplateUrlBtn').show();
+	} else if (!data.success) {
+		$('#alertMessage').text(data.errorMessage);
+		alertModal.open();
+	}
+	$('#mask').hide();
+	$('#toast').css('transform','');
+	return;
+}
+
+function successSavePdfFolderUrl(data) {
+	if (data.success) {
+		$('#pdfFolderUrlSpan').text(data.url);
+		$('#editPdfFolderUrlDiv').hide();
+		$('#pdfFolderUrlDiv').show();
+		$('#cancelPdfFolderUrlBtn').hide();
+		$('#savePdfFolderUrlBtn').hide();
+		$('#editPdfFolderUrlBtn').show();
+		$('#mask').hide();
+		$('#toast').css('transform','');
+	} else if (!data.success) {
+		$('#alertMessage').text(data.errorMessage);
+		alertModal.open();
+	}
+	$('#mask').hide();
+	$('#toast').css('transform','');
+	return;
+}
+
+function successSaveTempFolderUrl(data) {
+	if (data.success) {
+		$('#tempFolderSpan').text(data.url);
+		$('#editTempFolderUrlDiv').hide();
+		$('#tempFolderUrlDiv').show();
+		$('#cancelTempFolderUrlBtn').hide();
+		$('#saveTempFolderUrlBtn').hide();
+		$('#editTempFolderUrlBtn').show();
+		$('#mask').hide();
+		$('#toast').css('transform','');
+	} else if (!data.success) {
+		$('#alertMessage').text(data.errorMessage);
+		alertModal.open();
+	}
+	$('#mask').hide();
+	$('#toast').css('transform','');
+	return;
+}
+
+function successSavePdfFileName(data) {
+	if (data.success) {
+		$('#pdfFileNameSpan').text(data.fileName);
+		$('#editPdfFileNameDiv').hide();
+		$('#pdfFileNameDiv').show();
+		$('#cancelPdfFileNameBtn').hide();
+		$('#savePdfFileNameBtn').hide();
+		$('#editPdfFileNameBtn').show();
+	}
+	$('#mask').hide();
+	$('#toast').css('transform','');
+	return;
+}
+
+function successSaveEmailToColName(data) {
+	if (data.success) {
+		$('#emailToColNameSpan').text(data.colName);
+		$('#editEmailToColNameDiv').hide();
+		$('#emailToColNameDiv').show();
+		$('#cancelEmailToColNameBtn').hide();
+		$('#saveEmailToColNameBtn').hide();
+		$('#editEmailToColNameBtn').show();
+	} else if (!data.success) {
+		$('#alertMessage').text(data.errorMessage);
+		alertModal.open();
+	}
+	$('#mask').hide();
+	$('#toast').css('transform','');
+	return;
+}
+
+function successSaveEmailSubject(data) {
+	if (data.success) {
+		$('#emailSubjectSpan').text(data.subject);
+		$('#editEmailSubjectDiv').hide();
+		$('#emailSubjectDiv').show();
+		$('#cancelEmailSubjectBtn').hide();
+		$('#saveEmailSubjectBtn').hide();
+		$('#editEmailSubjectBtn').show();
+	}
+	$('#mask').hide();
+	$('#toast').css('transform','');
+	return;
+}
+
+function successSaveEmailBody(data) {
+
+	if (data.success) {
+		if (data.type == 'text') {
+			sessionStorage.setItem('emailBodyText',data.emailBody);
+			sessionStorage.setItem('emailBodyHtml','');
+			var emailBody = data.emailBody.replace(/\n/g,"<br>");
+		} else if (data.type == 'html') {
+			sessionStorage.setItem('emailBodyHtml',data.emailBody);
+			sessionStorage.setItem('emailBodyText','');
+			var emailBody = data.emailBody;
+		}
+		$('#emailBody').html(emailBody);
+		$('#emailBody').css('text-align','left');
+		$('#editEmailBodyDiv').hide();
+		$('#emailBodyDiv').show();
+		$('#cancelEmailBodyBtn').hide();
+		$('#saveEmailBodyBtn').hide();
+		$('#editEmailBodyBtn').show();
+	}
+	$('#mask').hide();
+	$('#toast').css('transform','');
+	return;
+}
+
+function successLargeFormat(data) {
+
+}
+
+function successGetEmailTypes(data) {
+
+	if (data.type == 'text' && data.emailBodyHtml.length) {
+		$('#dialogMessage').text("Delete Email Body HTML?");
+		dialogModal.open();
+		$('#okayBtn').off('click');
+		$('#okayBtn').click(function(){
+			google.script.run.withSuccessHandler(successSaveEmailBody).saveEmailBody(data); // sets user properties
+		});
+		$('#mask').hide();
+		$('#toast').css('transform','');
+	} else if (data.type == 'html' && data.emailBodyText.length) {
+		$('#dialogMessage').text("Delete Email Body Text?");
+		dialogModal.open();
+		$('#okayBtn').off('click');
+		$('#okayBtn').click(function(){
+			google.script.run.withSuccessHandler(successSaveEmailBody).saveEmailBody(data);
+		});
+		$('#mask').hide();
+		$('#toast').css('transform','');
+	} else {
+		google.script.run.withSuccessHandler(successSaveEmailBody).saveEmailBody(data);
+	}
+}
+
+
+/*******************************************************/
+
+document.addEventListener('DOMContentLoaded', function() {
+	var elems = document.querySelectorAll('select');
+	var instances = M.FormSelect.init(elems,{});
+
+	var elems = document.querySelectorAll('.tooltipped');
+    var instances = M.Tooltip.init(elems,{margin:20,enterDelay:400});
+});
+
+function objectifyForm(formArray) {
+	var returnArray = {};
+	for (var i = 0; i < formArray.length; i++){
+		returnArray[formArray[i]['name']] = formArray[i]['value'];
+	}
+	return returnArray;
+}
+
+function success() {
+
+	$('#toast').css('transform','');
+}
+
+
+
+
+</script>

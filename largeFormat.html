@@ -1,0 +1,42 @@
+<?
+    var userProperties = PropertiesService.getUserProperties();
+   	if (type == 'html') {
+   		var emailBody = userProperties.getProperty('emailBodyHtml');
+   	} else if (type == 'text') {
+   		var emailBody = userProperties.getProperty('emailBodyText');
+   		emailBody = emailBody.replace(/\n/g,'<br>');
+   	}
+?>
+
+
+<!DOCTYPE html>
+<html>
+
+<head>
+	<base target="_top">
+	<link href='https://fonts.googleapis.com/css?family=Open+Sans:400italic,700italic,400,700,300&amp;subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/css/materialize.min.css">
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+</head>
+
+<style>
+	table {
+		border-collapse:unset!important
+	}
+</style>
+
+<body style="margin:0 auto;width:650px">
+	<?
+
+	if (type == 'text') { ?>
+		<h6><?!= emailBody;?></h6> <?
+	} else { ?>
+		<?!= emailBody;?><?
+	} ?>
+
+
+</body>
+
+
+</html>

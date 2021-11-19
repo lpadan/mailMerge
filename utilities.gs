@@ -10,5 +10,11 @@ function getId(Url) {
     if (!id) {
         return;
     }
-    return id[0]; // regex returns an array.  select zeroth element
+    return id[0]; // match returns an array.  select zeroth element
 }
+
+function include(filename) {
+
+    return HtmlService.createHtmlOutputFromFile(filename).getContent();
+}
+
