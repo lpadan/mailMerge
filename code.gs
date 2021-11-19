@@ -2,34 +2,34 @@
 function createAndSend(test=0) {
     var data,emailAddress,emailBody,emailSentIndex,headers,i,index,emailIindexj,pdfFile,pdfFiles,pdfCreatedIndex,sheet,emailSuccess,pdfSuccess,replace,re;
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName('Config');
-    if (!sheet) {
-        Browser.msgBox('The "Config" tab was not found');
-        return;
-    }
-    var docFileId = getId(sheet.getRange('B1').getValue());
-    var pdfFolderId = getId(sheet.getRange('B2').getValue());
-    var tempFolderId = getId(sheet.getRange('B3').getValue());
-    var pdfName = sheet.getRange('B4').getValue();
-    var emailSubject = sheet.getRange('B5').getValue();
-    var emailBodyHTML = sheet.getRange('B6').getValue();
+    // var sheet = ss.getSheetByName('Config');
+    // if (!sheet) {
+    //     Browser.msgBox('The "Config" tab was not found');
+    //     return;
+    // }
+    // var docFileId = getId(sheet.getRange('B1').getValue());
+    // var pdfFolderId = getId(sheet.getRange('B2').getValue());
+    // var tempFolderId = getId(sheet.getRange('B3').getValue());
+    // var pdfName = sheet.getRange('B4').getValue();
+    // var emailSubject = sheet.getRange('B5').getValue();
+    // var emailBodyHTML = sheet.getRange('B6').getValue();
 
-    var docFile = DriveApp.getFileById(docFileId);
-    var tempFolder = DriveApp.getFolderById(tempFolderId);
-    var pdfFolder = DriveApp.getFolderById(pdfFolderId);
+    // var docFile = DriveApp.getFileById(docFileId);
+    // var tempFolder = DriveApp.getFolderById(tempFolderId);
+    // var pdfFolder = DriveApp.getFolderById(pdfFolderId);
 
     if (test) {
-        sheet = ss.getSheetByName("Test Data");
+        sheet = ss.getSheetByName("[Mail Merge - Test]");
         if (!sheet) {
-            Browser.msgBox('The "Test Data" tab was not found');
+            Browser.msgBox('The "[Mail Merge - Test]" tab was not found');
             return;
         }
         sheet.activate();
     }
     else {
-        sheet = ss.getSheetByName("Data");
+        sheet = ss.getSheetByName("[Mail Merge - Data]");
         if (!sheet) {
-            Browser.msgBox('The "Data" tab was not found');
+            Browser.msgBox('The "[Mail Merge - Data]" tab was not found');
             return;
         }
         sheet.activate();
@@ -264,7 +264,7 @@ function savePdfFileName(fileName) {
 function saveEmailToColName(colName) {
     var data = {};
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName('data');
+    var sheet = ss.getSheetByName('[Mail Merge - Data]');
     var headers = sheet.getDataRange().offset(0,0,1).getValues()[0]; // 1D array
     if (!headers.includes(colName)) {
         data.success = false;
