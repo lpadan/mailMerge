@@ -24,7 +24,7 @@
 <body>
 
 
-<div style="width:725px;height:700px;background:#f3f3f3;margin:auto;margin-top:100px;padding:20px;overflow-y: scroll">
+<!-- <div style="width:725px;height:700px;background:#f3f3f3;margin:auto;margin-top:100px;padding:20px;overflow-y: scroll"> -->
 
 	<p>
 	The Mail Merge code will create individualized (merged) PDFs from a Google Doc Template, save the PDFs to a specified Google Drive folder, and then send emails to a recipient list with the PDF attached.
@@ -66,14 +66,13 @@
 	<ul>
 		<li>Data</li>
 		<li>Test Data</li>
-		<li>Config</li>
 	</ul>
 
 	<h3>Data Tab</h3>
 
 	<ul>
 		<li>The Data tab may contain any number of columns, with any title, and in any order</li>
-		<li>Columns entitled "email", "pdf created" and "email sent" are required and are case sensitive (must be all lowercase)</li>
+		<li>Columns entitled "pdf created" and "email sent" are required and are case sensitive (must be all lowercase)</li>
 		<li>The program will fill in the <em>pdf created</em> and <em>email sent</em> columns with either "yes", "no" or an error message</li>
 		<li>When a row is successfully processed it will be colored green. If either the PDF creation or the email send fails, the row will be colored red.</li>
 		<li>To reprocess the rows on the Data tab, where one or more rows have failed, clear the values in the <em>pdf created</em> and <em>email sent</em> columns in the failed row(s), and select Create PDF and Send. Rows that were previously processed successfully will be skipped. You do not need to delete these rows to avoid processing them twice. </li>
@@ -87,21 +86,10 @@
 	</ul>
 
 
-	<h3>Config Tab</h3>
-
-	<ul>
-		<li>B1 - Document Template URL: The Google Docs Document Template</li>
-		<li>B2 - PDF Folder URL: The Drive folder where the PDF files will be saved</li>
-		<li>B3 - Temp Folder URL: A temporary Drive Folder for temporary file processing</li>
-		<li>B4 - PDF File Name: The name for the PDF Files - {} Markers may be used in the name</li>
-		<li>B5 - Email Subject: The subject line to be used in the emails</li>
-		<li>B6 - Email Body HTML: The email body must be in HTML. e.g. use &lt;br&gt; instead of line returns</li>
-
-	</ul>
 
 
 
-</div>
+<!-- </div> -->
 
 </body>
 

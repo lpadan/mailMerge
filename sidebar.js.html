@@ -331,7 +331,10 @@ $('input[name=emailType]').change(function() {
 		$('#editEmailBodyTextArea').val(emailBodyHtml).focus();
 		$('#emailBody').html(emailBodyHtml);
 	}
+});
 
+$('#help').click(function() {
+	google.script.run.help();
 });
 
 function successSaveDocumentTemplateUrl(data) {

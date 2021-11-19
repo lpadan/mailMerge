@@ -129,7 +129,7 @@ function sendTestEmail() {
 
 function help() {
     var html = HtmlService.createTemplateFromFile('help');
-    html = html.evaluate().setWidth(725).setHeight(700);
+    html = html.evaluate().setWidth(750).setHeight(700);
     SpreadsheetApp.getUi().showModalDialog(html, ' Mail Merge - Help');
 }
 
@@ -144,8 +144,10 @@ function openSidebar() {
         }
         ss.insertSheet('[Mail Merge - Data]');
         var dataSheet = ss.getSheetByName('[Mail Merge - Data]');
-        dataSheet.activate();
-        formatDisplaySheet('std');
+        dataSheet.setRowHeight(1,25);
+        dataSheet.getRange('A1').setBackground('#4285f4').setValue('').setFontSize(12);
+        dataSheet.getRange('B1:C1').setBackground('#26a69a').setFontColor('white').setValues([['pdf created','email sent']]).setFontSize(12);
+        dataSheet.setColumnWidths(1,3,200).activate();
     }
 
     if (!ss.getSheetByName('[Mail Merge - Test]')) {
@@ -155,7 +157,10 @@ function openSidebar() {
         }
         ss.insertSheet('[Mail Merge - Test]');
         var dataSheet = ss.getSheetByName('[Mail Merge - Test]');
-        formatDisplaySheet('std');
+        dataSheet.setRowHeight(1,25);
+        dataSheet.getRange('A1').setBackground('#4285f4').setValue('').setFontSize(12);
+        dataSheet.getRange('B1:C1').setBackground('#26a69a').setFontColor('white').setValues([['pdf created','email sent']]).setFontSize(12);
+        dataSheet.setColumnWidths(1,3,200).activate();
     }
 
     var data = {};
