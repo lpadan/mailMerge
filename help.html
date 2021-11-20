@@ -47,7 +47,6 @@
 			<li>Delete <em>Copy of Doc Template</em></li>
 			<li>Send an email to the email address in the "email" column</li>
 			<ul>
-				<li>The email body is pulled from the Config Tab</li>
 				<li>The email body may contain "{}" markers as well (in any quantity and may be repeated), and data will be merged from the Data tab into the email body</li>
 			</ul>
 		</ul>
@@ -64,11 +63,11 @@
 
 	<p>The following tabs, with exact case sensitive names, must exist in any order. Any other tabs are allowed.</p>
 	<ul>
-		<li>Data</li>
-		<li>Test Data</li>
+		<li>[Mail Merge - Data]</li>
+		<li>[Mail Merge - Test]</li>
 	</ul>
 
-	<h3>Data Tab</h3>
+	<h3>[Mail Merge - Data] Tab</h3>
 
 	<ul>
 		<li>The Data tab may contain any number of columns, with any title, and in any order</li>
@@ -78,10 +77,10 @@
 		<li>To reprocess the rows on the Data tab, where one or more rows have failed, clear the values in the <em>pdf created</em> and <em>email sent</em> columns in the failed row(s), and select Create PDF and Send. Rows that were previously processed successfully will be skipped. You do not need to delete these rows to avoid processing them twice. </li>
 	</ul>
 
-	<h3>Test Data Tab</h3>
+	<h3>[Mail Merge - Test] Tab</h3>
 
 	<ul>
-		<li>Must have the exact same columns as the <em>Data</em> tab</li>
+		<li>Must have the exact same columns as the <em>[Mail Merge - Data]</em> tab</li>
 
 	</ul>
 

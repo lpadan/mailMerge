@@ -1,57 +1,70 @@
 <script>
 
 $('#largeFormat').click(function() {
-	var type = $('input[name=emailType]:checked').val()
+	var type = $('input[name=emailType]:checked').val();
+	// ADD
+	// add ablity to edit from within large modal
+	// then need to know if in edit mode or display mode before displaying
+	// set a session variable when either is clicked
 	google.script.run.largeFormat(type);
 });
 
 
-$('#cancelEmailBodyBtn').click(function(){
+
+$('#editEmailTextBtn').click(function(){
+	$('#emailBodyText').hide();
+	$('#editEmailBodyTextDiv').show();
 	$(this).hide();
-	$('#editEmailBodyBtn').show();
-	$('#saveEmailBodyBtn').hide();
-	$('#emailBodyDiv').show();
-	$('#editEmailBodyDiv').hide();
-	$('#mask').hide();
-	$('#toast').css('transform','');
+	$('#cancelEmailTextBtn').show();
+	$('#saveEmailTextBtn').show();
 });
 
-$('#editEmailBodyBtn').click(function(){
-	var type = $('input[name=emailType]:checked').val();
-	$('#emailBodyDiv').hide();
-	$('#editEmailBodyDiv').show();
-	$('#saveEmailBodyBtn').show();
-	if ($('#emailBody').html() == '[ no body ]') {
-		$('#editEmailBodyTextArea').focus().val('');
-	} else {
-		var emailBody = $('#emailBody').html();
-		if (type == 'text') {
-			var emailBody = emailBody.replace(/<br>/g,"\n");
-		}
-		$('#editEmailBodyTextArea').focus().val(emailBody);
-	}
-	$('#editEmailBodyBtn').hide();
-	$('#cancelEmailBodyBtn').show();
+$('#cancelEmailTextBtn').click(function(){
+	$('#emailBodyText').show();
+	$('#editEmailBodyTextDiv').hide();
+	$(this).hide();
+	$('#editEmailTextBtn').show();
+	$('#saveEmailTextBtn').hide();
 });
 
-$('#saveEmailBodyBtn').click(function() {
+$('#saveEmailTextBtn').click(function() {
 	var data = {};
-	var type = $('input[name=emailType]:checked').val();
-	var emailBody = $('#editEmailBodyTextArea').val();
-	if (!emailBody && type == 'text') {
-		$('#alertMessage').text('Please provide body text');
-		alertModal.open();
-		return;
-	} else if (!emailBody && type == 'html') {
-		$('#alertMessage').text('Please provide body html');
-		alertModal.open();
-		return;
+	var emailBodyText = $('#editEmailBodyTextArea').val();
+	if (!emailBodyText || emailBodyText == '[ no body ]') {
+		$('#editEmailBodyTextArea').val('').focus();
 	}
 	$('#mask').show();
 	$('#toast').css('transform','translateY(-60px)');
-	data.type = type;
-	data.emailBody = emailBody;
-	google.script.run.withSuccessHandler(successGetEmailTypes).getEmailTypes(data);
+	google.script.run.withSuccessHandler(successSaveEmailBodyText).saveEmailBodyText(emailBodyText);
+});
+
+
+
+$('#cancelEmailHtmlBtn').click(function(){
+	$('#emailBodyHtml').show();
+	$('#editEmailBodyHtmlDiv').hide();
+	$(this).hide();
+	$('#editEmailHtmlBtn').show();
+	$('#saveEmailHtmlBtn').hide();
+});
+
+$('#editEmailHtmlBtn').click(function(){
+	$('#emailBodyHtml').hide();
+	$('#editEmailBodyHtmlDiv').show();
+	$(this).hide();
+	$('#cancelEmailHtmlBtn').show();
+	$('#saveEmailHtmlBtn').show();
+});
+
+$('#saveEmailHtmlBtn').click(function() {
+	var data = {};
+	var emailBodyHtml = $('#editEmailBodyHtmlArea').val();
+	if (!emailBodyHtml || emailBodyHtml == '[ no body ]') {
+		$('#editEmailBodyHtmlArea').val('');
+	}
+	$('#mask').show();
+	$('#toast').css('transform','translateY(-60px)');
+	google.script.run.withSuccessHandler(successSaveEmailBodyHtml).saveEmailBodyHtml(emailBodyHtml);
 });
 
 
@@ -315,27 +328,33 @@ $('#closeMenu').click(function(e){
 	$('.sidenav').sidenav('close');
 });
 
-
 $('input[name=emailType]').change(function() {
 
 	var type = $(this).val();
 	if (type == 'text') {
-		var emailBodyText = sessionStorage.getItem('emailBodyText');
-		$('#editEmailBodyTextArea').val(emailBodyText).focus();
-		emailBodyText = emailBodyText.replace(/\n/g,'<br>');
-		$('#emailBody').html(emailBodyText);
-
-
+		$('#emailBodyTextDiv').show();
+		$('#emailBodyHtmlDiv').hide();
 	} else if (type == 'html') {
-		var emailBodyHtml = sessionStorage.getItem('emailBodyHtml');
-		$('#editEmailBodyTextArea').val(emailBodyHtml).focus();
-		$('#emailBody').html(emailBodyHtml);
+		$('#emailBodyTextDiv').hide();
+		$('#emailBodyHtmlDiv').show();
 	}
 });
 
 $('#help').click(function() {
+
 	google.script.run.help();
 });
+
+$('#processRowsBtn').click(function(e) {
+	e.preventDefault();
+	$('#mask').show();
+	$('#toast').css('transform','translateY(-60px)');
+	var formArray = $('#form1').serializeArray();
+	var formData = objectifyForm(formArray);
+	formData.emailType = $('input[name=emailType]:checked').val();
+	google.script.run.withSuccessHandler(successProcessForm).processRows(formData);
+});
+
 
 function successSaveDocumentTemplateUrl(data) {
 	if (data.success) {
@@ -437,58 +456,47 @@ function successSaveEmailSubject(data) {
 	return;
 }
 
-function successSaveEmailBody(data) {
+function successSaveEmailBodyText(data) {
 
 	if (data.success) {
-		if (data.type == 'text') {
-			sessionStorage.setItem('emailBodyText',data.emailBody);
-			sessionStorage.setItem('emailBodyHtml','');
-			var emailBody = data.emailBody.replace(/\n/g,"<br>");
-		} else if (data.type == 'html') {
-			sessionStorage.setItem('emailBodyHtml',data.emailBody);
-			sessionStorage.setItem('emailBodyText','');
-			var emailBody = data.emailBody;
+		if (!data.emailBodyText) {
+			$('#emailBodyText').html('[ no body ]').css('text-align','center').show();
+		} else {
+			var emailBodyText = data.emailBodyText.replace(/\n/g,"<br>");
+			$('#emailBodyText').html(emailBodyText).css('text-align','left').show();
 		}
-		$('#emailBody').html(emailBody);
-		$('#emailBody').css('text-align','left');
-		$('#editEmailBodyDiv').hide();
-		$('#emailBodyDiv').show();
-		$('#cancelEmailBodyBtn').hide();
-		$('#saveEmailBodyBtn').hide();
-		$('#editEmailBodyBtn').show();
+		$('#editEmailBodyTextDiv').hide();
+		$('#cancelEmailTextBtn').hide();
+		$('#saveEmailTextBtn').hide();
+		$('#editEmailTextBtn').show();
 	}
 	$('#mask').hide();
 	$('#toast').css('transform','');
 	return;
 }
 
-function successLargeFormat(data) {
+function successSaveEmailBodyHtml(data) {
 
+	if (data.success) {
+		if (!data.emailBodyHtml) {
+			$('#emailBodyHtml').html('[ no body ]').css('text-align','center').show();
+		} else {
+			$('#emailBodyHtml').html(data.emailBodyHtml).show();
+		}
+		$('#editEmailBodyHtmlDiv').hide();
+		$('#emailBodyHtmlDiv').show();
+		$('#cancelEmailHtmlBtn').hide();
+		$('#saveEmailHtmlBtn').hide();
+		$('#editEmailHtmlBtn').show();
+	}
+	$('#mask').hide();
+	$('#toast').css('transform','');
+	return;
 }
 
-function successGetEmailTypes(data) {
-
-	if (data.type == 'text' && data.emailBodyHtml.length) {
-		$('#dialogMessage').text("Delete Email Body HTML?");
-		dialogModal.open();
-		$('#okayBtn').off('click');
-		$('#okayBtn').click(function(){
-			google.script.run.withSuccessHandler(successSaveEmailBody).saveEmailBody(data); // sets user properties
-		});
-		$('#mask').hide();
-		$('#toast').css('transform','');
-	} else if (data.type == 'html' && data.emailBodyText.length) {
-		$('#dialogMessage').text("Delete Email Body Text?");
-		dialogModal.open();
-		$('#okayBtn').off('click');
-		$('#okayBtn').click(function(){
-			google.script.run.withSuccessHandler(successSaveEmailBody).saveEmailBody(data);
-		});
-		$('#mask').hide();
-		$('#toast').css('transform','');
-	} else {
-		google.script.run.withSuccessHandler(successSaveEmailBody).saveEmailBody(data);
-	}
+function successProcessForm(data) {
+	$('#mask').hide();
+	$('#toast').css('transform','');
 }
 
 
