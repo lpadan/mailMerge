@@ -24,8 +24,8 @@ function formatDisplaySheet(sheet) {
 
     sheet.setRowHeight(1,43);
     sheet.getRange("A1:I1").setFontSize(13).setVerticalAlignment('middle').setFontColor('white').setBackgroundColor('#4285f4');
-    sheet.getRange("A1").setValue('    M A I L   M E R G E');
     sheet.getRange("A1:I1").mergeAcross().setHorizontalAlignment('left');
+    sheet.getRange("A1").setValue('    M A I L   M E R G E');
 
     sheet.setRowHeight(2,30);
     var values = ['column 1','column 2','column 3','column 4','column 5','column 6','column 7','pdf created','email sent'];

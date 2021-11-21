@@ -353,7 +353,7 @@ $('#help').click(function() {
 	google.script.run.help();
 });
 
-$('#processRowsBtn').click(function(e) {
+$('#mergeAndEmailBtn').click(function(e) {
 	e.preventDefault();
 
 	var rowsToProcess = $('#selectRows').val();
@@ -403,11 +403,45 @@ $('#processRowsBtn').click(function(e) {
 	$('#okayBtn').click(function(){
 		$('#mask').show();
 		$('#toast').css('transform','translateY(-60px)');
-		formData.emailType = $('input[name=emailType]:checked').val();
-		google.script.run.withSuccessHandler(successProcessRows).processRows(formData);
+		google.script.run.withSuccessHandler(processRow).getNumRows();
 	});
 });
 
+
+function processRow(data) {
+	if (!data.success) {
+		$('#alertMessage').text(data.errorMessage);
+		alertModal.open();
+		success();
+		return;
+	}
+	var numRows = data.numRows;
+	var headers = data.headers;
+	data = {};
+	var formArray = $('#form1').serializeArray();
+	data = objectifyForm(formArray);
+	data.emailType = $('input[name=emailType]:checked').val();
+	data.rowNum = 3;
+	data.remainingRows = numRows;
+	data.headers = headers;
+	google.script.run.withSuccessHandler(successProcessRow).processRow(data);
+}
+
+function successProcessRow(data){
+    if (!data.success) {
+		$('#alertMessage').text(data.errorMessage);
+		alertModal.open();
+		success();
+		return;
+	}
+    else if (data.remainingRows > 0) {
+    	google.script.run.withSuccessHandler(successProcessRow).processRow(data);
+
+    } else {
+    	success();
+    	return;
+    }
+}
 
 function successSaveDocumentTemplateUrl(data) {
 	if (data.success) {
@@ -529,14 +563,6 @@ function successSaveEmailBodyHtml(data) {
 		$('#cancelEmailHtmlBtn').hide();
 		$('#saveEmailHtmlBtn').hide();
 		$('#editEmailHtmlBtn').show();
-	}
-	success();
-}
-
-function successProcessRows(data) {
-	if (!data.success) {
-		$('#alertMessage').text(data.errorMessage);
-		alertModal.open();
 	}
 	success();
 }

@@ -1,8 +1,3 @@
-function sendTestEmail() {
-
-    createAndSend(test=1);
-}
-
 function help() {
     var html = HtmlService.createTemplateFromFile('help');
     html = html.evaluate().setWidth(750).setHeight(700);
@@ -27,7 +22,7 @@ function openSidebar() {
 
     } else {
         displaySheet.activate();
-        var response = ui.alert('Format Display Sheet?', ui.ButtonSet.YES_NO);
+        var response = ui.alert('Clear and Format Display Sheet?', ui.ButtonSet.YES_NO);
         if (response == ui.Button.YES) {
             displaySheet.clear();
             formatDisplaySheet(displaySheet);
@@ -182,23 +177,47 @@ function largeFormat(type) {
     SpreadsheetApp.getUi().showModalDialog(html, 'Email Body');
 }
 
-function processRows(formData) {
+function getNumRows(){
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName('[Display]');
+    sheet.activate();
+    var data = {};
+    if (sheet == null) {
+        data.success = false;
+        data.errorMessage = 'The Sheet "[Display]" was not found.  Operation terminated';
+        return data;
+    }
+    var numRows = sheet.getLastRow();
+    data.headers = sheet.getDataRange().offset(1,0,1).getValues()[0]; // 1D array
+    data.numRows = numRows -2;
+    data.success = true;
+    return data;
+}
 
-    var data={},returnData={},emailAddress,emailBody,emailSentIndex,headers,i,index,emailIindexj,pdfFile,pdfFiles,pdfCreatedIndex,sheet,emailSuccess,pdfSuccess,replace,re;
+function processRow(data) {
+
+    var emailAddress,emailBody,emailSentIndex,headers,i,index,emailIindexj,pdfFile,pdfFiles,pdfCreatedIndex,sheet,emailSuccess,pdfSuccess,replace,re;
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     sheet = ss.getSheetByName("[Display]");
-    if (!sheet) {
-        Browser.msgBox('The "[Display]" tab was not found');
-        return;
+
+    var rowNum = data.rowNum;
+
+    if (sheet.isRowHiddenByFilter(rowNum) || sheet.isRowHiddenByUser(rowNum)) {
+        data.rowNum ++;
+        data.remainingRows --;
+        return data;
     }
-    sheet.activate();
+
+    var rowData = sheet.getRange(rowNum,1,1,data['headers'].length).getValues();
+    rowData = rowData.shift();
+    headers = data.headers;
 
     // form values
-    var rowsToProcess = formData.selectRows;
-    var createPdfFiles = formData.createPdfFiles;
-    var savePdfFiles = formData.savePdfFiles;
-    var sendEmails = formData.sendEmails;
-    var includePdfAttachment = formData.includePdfAttachment;
+    var rowsToProcess = data.selectRows;
+    var createPdfFiles = data.createPdfFiles;
+    var savePdfFiles = data.savePdfFiles;
+    var sendEmails = data.sendEmails;
+    var includePdfAttachment = data.includePdfAttachment;
     if (!createPdfFiles) includePdfAttachment = null;
 
     // file and folder settings
@@ -210,9 +229,9 @@ function processRows(formData) {
 
     if (createPdfFiles) {
         if (!documentTemplateUrl || !pdfFolderUrl || !tempFolderUrl || !pdfFileName) {
-            returnData.success = false;
-            returnData.errorMessage = "Please fill out all File and Folder Settings";
-            return returnData;
+            data.success = false;
+            data.errorMessage = "Please fill out all File and Folder Settings";
+            return data;
         }
         var docFileId = getId(documentTemplateUrl);
         var pdfFolderId = getId(pdfFolderUrl);
@@ -223,147 +242,166 @@ function processRows(formData) {
         var tempFolder = DriveApp.getFolderById(tempFolderId);
     }
 
-
     if (sendEmails) {
-        var emailType = formData.emailType;
+        var emailType = data.emailType;
         var emailToColName = userProperties.getProperty('emailToColName');
         var emailSubject = userProperties.getProperty('emailSubject');
         var emailBodyHtml = userProperties.getProperty('emailBodyHtml');
         var emailBodyText = userProperties.getProperty('emailBodyText');
         if (!emailToColName || !emailSubject || !(emailBodyHtml || emailBodyText)) {
-            returnData.success = false;
-            returnData.errorMessage = "Please fill out all Email Settings";
-            return returnData;
+            data.success = false;
+            data.errorMessage = "Please fill out all Email Settings";
+            return data;
         }
-
-    }
-
-    data = sheet.getDataRange().getValues();
-    data.shift();
-    headers = data.shift();
-    if (rowsToProcess == 'firstRow') {
-        data = [data[0]];
+        if ((emailType == 'text' && !emailBodyText) || (emailType == 'html' && !emailBodyHtml)) {
+            data.success = false;
+            data.errorMessage = "Email Body is empty";
+            return data;
+        }
     }
 
     emailToIndex = headers.indexOf(emailToColName);
+
+    if (emailToIndex == -1 && sendEmails) {
+        data.success = false;
+        data.errorMessage = "Recipient Email Column not found";
+        return data;
+    }
+
     pdfCreatedIndex = headers.indexOf('pdf created');
     emailSentIndex = headers.indexOf('email sent');
+    pdfSuccess = 0;
+    emailSuccess = 0;
 
-    for (i = 0; i < data.length; i++) {
+    if (rowData[pdfCreatedIndex] && rowData[emailSentIndex]) {
+        data.success = true;
+        data.remainingRows --;
+        data.rowNum ++;
+        return data;
+    }
 
-        pdfSuccess = 0;
-        emailSuccess = 0;
-        if (data[i][pdfCreatedIndex] && data[i][emailSentIndex]) continue; // skip if both columns contain values
-        if (createPdfFiles && data[i][pdfCreatedIndex] && !sendEmails) continue;
-        if (data[i][emailSentIndex] && sendEmails && !createPdfFiles) continue;
+    if (createPdfFiles && rowData[pdfCreatedIndex] && !sendEmails) {
+        data.success = true;
+        data.remainingRows --;
+        data.rowNum ++;
+        return data;
+    }
 
-        if (createPdfFiles) {
+    if (rowData[emailSentIndex] && sendEmails && !createPdfFiles) {
+        data.success = true;
+        data.remainingRows --;
+        data.rowNum ++;
+        return data;
+    }
 
-            var tempFile = docFile.makeCopy(tempFolder);
-            var tempDocFile = DocumentApp.openById(tempFile.getId());
-            var body = tempDocFile.getBody();
+    if (createPdfFiles) {
 
-            for (j = 0; j < headers.length; j++) {
-                body.replaceText("{" + headers[j] + "}", data[i][j]); // does a global replace automatically
-                pdfFileName = pdfFileName.replace("{" + headers[j] + "}", data[i][j]);
-            }
+        var tempFile = docFile.makeCopy(tempFolder);
+        var tempDocFile = DocumentApp.openById(tempFile.getId());
+        var body = tempDocFile.getBody();
 
-            tempDocFile.saveAndClose();
-            var pdfContentBlob = tempFile.getAs(MimeType.PDF);
-            tempFolder.removeFile(tempFile);
+        for (j = 0; j < headers.length; j++) {
+            body.replaceText("{" + headers[j] + "}", rowData[j]); // does a global replace automatically
+            pdfFileName = pdfFileName.replace("{" + headers[j] + "}", rowData[j]);
+        }
 
-            if (savePdfFiles) {
+        tempDocFile.saveAndClose();
+        var pdfContentBlob = tempFile.getAs(MimeType.PDF);
+        tempFolder.removeFile(tempFile);
 
-                if (!data[i][pdfCreatedIndex]) {
-                    try {
-                      pdfFile = pdfFolder.createFile(pdfContentBlob).setName(pdfFileName);
-                      sheet.getRange(i+3,pdfCreatedIndex+1).setValue('yes');
-                      pdfSuccess = 1;
-                    } catch (error) {
-                      sheet.getRange(i+3,pdfCreatedIndex+1).setValue(error);
-                      sheet.getRange(i+3,emailSentIndex+1).setValue('no');
-                      pdfSuccess = 0;
-                      sheet.getRange(i+3,1,1,headers.length).setBackground("#ffcccc"); // red
-                      continue;
-                    }
+        if (savePdfFiles) {
+
+            if (!rowData[pdfCreatedIndex]) {
+                try {
+                    pdfFile = pdfFolder.createFile(pdfContentBlob).setName(pdfFileName);
+                    sheet.getRange(rowNum,pdfCreatedIndex+1).setValue('yes');
+                    pdfSuccess = 1;
+                } catch (error) {
+                    sheet.getRange(rowNum,pdfCreatedIndex+1).setValue(error);
+                    sheet.getRange(rowNum,emailSentIndex+1).setValue('no');
+                    pdfSuccess = 0;
+                    sheet.getRange(rowNum,1,1,headers.length).setBackground("#ffcccc"); // red
+                    data.success = true;
+                    data.remainingRows --;
+                    data.rowNum ++;
+                    return data;
                 }
-            } else {
-                pdfSuccess = 1;
-                sheet.getRange(i+3,pdfCreatedIndex+1).setValue('n/a');
             }
         } else {
             pdfSuccess = 1;
-            sheet.getRange(i+3,pdfCreatedIndex+1).setValue('n/a');
+            sheet.getRange(rowNum,pdfCreatedIndex+1).setValue('n/a');
         }
-
-        if (sendEmails) {
-            if (!data[i][emailSentIndex]) { // no value in email sent column
-
-                if (!data[i][emailToIndex]) { // email To: address is blank
-                    emailSuccess = 0;
-                    sheet.getRange(i+3,emailSentIndex+1).setValue('no email address');
-                } else {
-                    emailAddress = data[i][emailToIndex];
-
-                    if (emailType == 'text') {
-                        emailBody = emailBodyText;
-                        for (j = 0; j < headers.length; j++) {
-                            replace = "{" + headers[j] + "}";
-                            re = new RegExp(replace,"g"); // global replace
-                            emailBody = emailBody.replace(re,data[i][j]);
-                        }
-                        emailBody = emailBody.replace(/\n/g,'<br>');
-                    } else if (emailType == 'html') {
-                        emailBody = emailBodyHtml;
-                    }
-
-                    try {
-
-                        if (includePdfAttachment) {
-                            if (!pdfFile) {
-                                pdfContentBlob.setName(pdfFileName);
-                                pdfFile = pdfContentBlob;
-                                pdfSuccess = 1;
-                            }
-                            MailApp.sendEmail(emailAddress,emailSubject,null, {
-                                attachments: [pdfFile],
-                                htmlBody: emailBody
-                            });
-
-                        } else {
-                            MailApp.sendEmail(emailAddress,emailSubject,null, {
-                                htmlBody: emailBody
-                          });
-                        }
-
-                      sheet.getRange(i+3,emailSentIndex+1).setValue('yes');
-                      emailSuccess = 1;
-                    } catch (error) {
-                      sheet.getRange(i+3,emailSentIndex+1).setValue(error);
-                      emailSuccess = 0;
-                      sheet.getRange(i+3,1,1,headers.length).setBackground("#ffcccc"); // red
-                    }
-                }
-            } else { // email has value in column
-                emailSuccess = 1;
-            }
-
-        } else { // do not send emails
-            emailSuccess = 1;
-            sheet.getRange(i+3,emailSentIndex+1).setValue('n/a');
-        }
-
-        if (pdfSuccess && emailSuccess) {
-            sheet.getRange(i+3,1,1,headers.length).setBackground("#e6ffe6"); // green
-        } else {
-           sheet.getRange(i+3,1,1,headers.length).setBackground("#ffcccc"); // red
-        }
+    } else {
+        pdfSuccess = 1;
+        sheet.getRange(rowNum,pdfCreatedIndex+1).setValue('n/a');
     }
-    returnData.success = true;
-    return returnData;
+
+    if (sendEmails) {
+        if (!rowData[emailSentIndex]) { // no value in email sent column
+
+            if (!rowData[emailToIndex]) { // email To: address is blank
+                emailSuccess = 0;
+                sheet.getRange(rowNum,emailSentIndex+1).setValue('no email address');
+            } else {
+                emailAddress = rowData[emailToIndex];
+
+                if (emailType == 'text') {
+                    emailBody = emailBodyText;
+                    for (j = 0; j < headers.length; j++) {
+                        replace = "{" + headers[j] + "}";
+                        re = new RegExp(replace,"g"); // global replace
+                        emailBody = emailBody.replace(re,rowData[j]);
+                    }
+                    emailBody = emailBody.replace(/\n/g,'<br>');
+                } else if (emailType == 'html') {
+                    emailBody = emailBodyHtml;
+                }
+
+                try {
+
+                    if (includePdfAttachment) {
+                        if (!pdfFile) {
+                            pdfContentBlob.setName(pdfFileName);
+                            pdfFile = pdfContentBlob;
+                            pdfSuccess = 1;
+                        }
+                        MailApp.sendEmail(emailAddress,emailSubject,null, {
+                            attachments: [pdfFile],
+                            htmlBody: emailBody
+                        });
+
+                    } else {
+                        MailApp.sendEmail(emailAddress,emailSubject,null, {
+                            htmlBody: emailBody
+                      });
+                    }
+
+                  sheet.getRange(rowNum,emailSentIndex+1).setValue('yes');
+                  emailSuccess = 1;
+                } catch (error) {
+                  sheet.getRange(rowNum,emailSentIndex+1).setValue(error);
+                  emailSuccess = 0;
+                  sheet.getRange(rowNum,1,1,headers.length).setBackground("#ffcccc"); // red
+                }
+            }
+        } else { // email has value in column
+            emailSuccess = 1;
+        }
+
+    } else { // do not send emails
+        emailSuccess = 1;
+        sheet.getRange(rowNum,emailSentIndex+1).setValue('n/a');
+    }
+
+    if (pdfSuccess && emailSuccess) {
+        sheet.getRange(rowNum,1,1,headers.length).setBackground("#e6ffe6"); // green
+    } else {
+       sheet.getRange(rowNum,1,1,headers.length).setBackground("#ffcccc"); // red
+    }
+
+    data.success = true;
+    data.remainingRows --;
+    data.rowNum ++;
+    return data;
 }
-
-
-
-
 
