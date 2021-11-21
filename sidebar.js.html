@@ -422,7 +422,14 @@ function processRow(data) {
 	data = objectifyForm(formArray);
 	data.emailType = $('input[name=emailType]:checked').val();
 	data.rowNum = 3;
-	data.remainingRows = numRows;
+
+	var rowsToProcess = $('#selectRows').val();
+	if (rowsToProcess == 'firstRow') {
+		data.remainingRows = 1;
+	} else if (rowsToProcess == 'allRows') {
+		data.remainingRows = numRows;
+	}
+
 	data.headers = headers;
 	google.script.run.withSuccessHandler(successProcessRow).processRow(data);
 }
