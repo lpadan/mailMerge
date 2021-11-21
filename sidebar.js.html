@@ -221,7 +221,11 @@ $('#editPdfFolderUrlBtn').click(function(){
 	$('#pdfFolderUrlDiv').hide();
 	$('#editPdfFolderUrlDiv').show();
 	$('#savePdfFolderUrlBtn').show();
-	$('#editPdfFolderUrlInput').focus().val($('#pdfFolderUrlSpan').text());
+	if ($('#pdfFolderUrlSpan').text() == '[ no url ]') {
+		$('#editPdfFolderUrlInput').focus().val('');
+	} else {
+		$('#editPdfFolderUrlInput').focus().val($('#pdfFolderUrlSpan').text());
+	}
 	$('#editPdfFolderUrlBtn').hide();
 	$('#cancelPdfFolderUrlBtn').show();
 });
@@ -252,7 +256,11 @@ $('#editDocumentTemplateUrlBtn').click(function(){
 	$('#documentTemplateUrlDiv').hide();
 	$('#editDocumentTemplateUrlDiv').show();
 	$('#saveDocumentTemplateUrlBtn').show();
-	$('#editDocumentTemplateUrlInput').focus().val($('#documentTemplateUrlSpan').text());
+	if ($('#documentTemplateUrlSpan').text() == '[ no url ]') {
+		$('#editDocumentTemplateUrlInput').focus().val('');
+	} else {
+		$('#editDocumentTemplateUrlInput').focus().val($('#documentTemplateUrlSpan').text());
+	}
 	$('#editDocumentTemplateUrlBtn').hide();
 	$('#cancelDocumentTemplateUrlBtn').show();
 });
@@ -271,10 +279,10 @@ $('#saveDocumentTemplateUrlBtn').click(function() {
 
 
 
-$('#documentSettingsLink').click(function(e){
+$('#fileAndFolderSettingsLink').click(function(e){
 	e.preventDefault();
 	$('.link').hide();
-	$('#documentSettings').show();
+	$('#fileAndFolderSettings').show();
 	$('.sidenav').sidenav('close');
 });
 
@@ -347,12 +355,57 @@ $('#help').click(function() {
 
 $('#processRowsBtn').click(function(e) {
 	e.preventDefault();
-	$('#mask').show();
-	$('#toast').css('transform','translateY(-60px)');
+
+	var rowsToProcess = $('#selectRows').val();
+	if (!rowsToProcess) {
+		$('#alertMessage').text('Please select the Rows to Process');
+		alertModal.open();
+		return;
+	}
+
 	var formArray = $('#form1').serializeArray();
 	var formData = objectifyForm(formArray);
-	formData.emailType = $('input[name=emailType]:checked').val();
-	google.script.run.withSuccessHandler(successProcessForm).processRows(formData);
+
+	if (!formData.createPdfFiles && !formData.sendEmails) {
+		$('#alertMessage').text('Please select "Create PDF Files or "Send Emails');
+		alertModal.open();
+		return;
+	};
+	if (formData.createPdfFiles && !formData.savePdfFiles && !formData.sendEmails) {
+		$('#alertMessage').text('Please select "Save PDF Files or "Send Emails');
+		alertModal.open();
+		return;
+	}
+	if (formData.sendEmails) {
+		var type = $('input[name=emailType]:checked').val();
+		if (type == 'text') {
+			var emailBodyText = $('#emailBodyText').html();
+			if (!emailBodyText) {
+				$('#alertMessage').text('Email Text Body is blank');
+				alertModal.open();
+				return;
+			}
+		} else if (type == 'html') {
+			var emailBodyHtml = $('#emailBodyHtml').html();
+			if (!emailBodyHtml) {
+				$('#alertMessage').text('Email HTML Body is blank');
+				alertModal.open();
+				return;
+			}
+		}
+	}
+
+	if (rowsToProcess == "allRows") $('#dialogMessage').text("Process ALL rows?");
+	else if (rowsToProcess == 'firstRow') $('#dialogMessage').text("Process First Row?");
+
+	dialogModal.open();
+	$('#okayBtn').off('click');
+	$('#okayBtn').click(function(){
+		$('#mask').show();
+		$('#toast').css('transform','translateY(-60px)');
+		formData.emailType = $('input[name=emailType]:checked').val();
+		google.script.run.withSuccessHandler(successProcessRows).processRows(formData);
+	});
 });
 
 
@@ -368,9 +421,7 @@ function successSaveDocumentTemplateUrl(data) {
 		$('#alertMessage').text(data.errorMessage);
 		alertModal.open();
 	}
-	$('#mask').hide();
-	$('#toast').css('transform','');
-	return;
+	success();
 }
 
 function successSavePdfFolderUrl(data) {
@@ -387,14 +438,12 @@ function successSavePdfFolderUrl(data) {
 		$('#alertMessage').text(data.errorMessage);
 		alertModal.open();
 	}
-	$('#mask').hide();
-	$('#toast').css('transform','');
-	return;
+	success();
 }
 
 function successSaveTempFolderUrl(data) {
 	if (data.success) {
-		$('#tempFolderSpan').text(data.url);
+		$('#tempFolderUrlSpan').text(data.url);
 		$('#editTempFolderUrlDiv').hide();
 		$('#tempFolderUrlDiv').show();
 		$('#cancelTempFolderUrlBtn').hide();
@@ -406,9 +455,7 @@ function successSaveTempFolderUrl(data) {
 		$('#alertMessage').text(data.errorMessage);
 		alertModal.open();
 	}
-	$('#mask').hide();
-	$('#toast').css('transform','');
-	return;
+	success();
 }
 
 function successSavePdfFileName(data) {
@@ -420,9 +467,7 @@ function successSavePdfFileName(data) {
 		$('#savePdfFileNameBtn').hide();
 		$('#editPdfFileNameBtn').show();
 	}
-	$('#mask').hide();
-	$('#toast').css('transform','');
-	return;
+	success();
 }
 
 function successSaveEmailToColName(data) {
@@ -437,9 +482,7 @@ function successSaveEmailToColName(data) {
 		$('#alertMessage').text(data.errorMessage);
 		alertModal.open();
 	}
-	$('#mask').hide();
-	$('#toast').css('transform','');
-	return;
+	success();
 }
 
 function successSaveEmailSubject(data) {
@@ -470,9 +513,7 @@ function successSaveEmailBodyText(data) {
 		$('#saveEmailTextBtn').hide();
 		$('#editEmailTextBtn').show();
 	}
-	$('#mask').hide();
-	$('#toast').css('transform','');
-	return;
+	success();
 }
 
 function successSaveEmailBodyHtml(data) {
@@ -489,14 +530,15 @@ function successSaveEmailBodyHtml(data) {
 		$('#saveEmailHtmlBtn').hide();
 		$('#editEmailHtmlBtn').show();
 	}
-	$('#mask').hide();
-	$('#toast').css('transform','');
-	return;
+	success();
 }
 
-function successProcessForm(data) {
-	$('#mask').hide();
-	$('#toast').css('transform','');
+function successProcessRows(data) {
+	if (!data.success) {
+		$('#alertMessage').text(data.errorMessage);
+		alertModal.open();
+	}
+	success();
 }
 
 
@@ -519,11 +561,8 @@ function objectifyForm(formArray) {
 }
 
 function success() {
-
+	$('#mask').hide();
 	$('#toast').css('transform','');
 }
-
-
-
 
 </script>

@@ -9,8 +9,8 @@ var emailSubject = data.emailSubject;
 var emailBodyHtml = data.emailBodyHtml;
 var emailBodyText = data.emailBodyText;
 
-if (emailBodyHtml.length) var type = 'html';
-if (emailBodyText.length) {
+if (emailBodyHtml && emailBodyHtml.length) var type = 'html';
+if (emailBodyText && emailBodyText.length) {
 	var emailBody = emailBodyText.replace(/\n/g,"<br>");
 	var type = 'text';
 } else {
@@ -54,7 +54,7 @@ if (emailBodyText.length) {
 	</div>
 
 	<li><a id="mergeAndEmailLink" href="javascript:void(0)"><i class="material-icons">launch</i>Merge and Email</a></li>
-	<li><a id="documentSettingsLink" href="javascript:void(0)"><i class="material-icons">settings</i>Document Settings</a></li>
+	<li><a id="fileAndFolderSettingsLink" href="javascript:void(0)"><i class="material-icons">settings</i>File & Folder Settings</a></li>
 	<li><a id="emailSettingsLink" href="javascript:void(0)"><i class="material-icons">settings</i>Email Settings</a></li>
 	<li><div class="divider"></div></li>
 	<li><a id="help" href="javascript:void(0)"><i class="material-icons">help_outline</i>Help</a></li>
@@ -82,7 +82,7 @@ if (emailBodyText.length) {
 				<div style="margin-top:15px">
 
 					<div class="input-field">
-						<select name="rowsToProcess">
+						<select id="selectRows" name="selectRows">
 							<option selected disabled value="">Select Rows</option>
 							<option value="allRows">All Rows</option>
 							<option value="firstRow">First Row</option>
@@ -132,10 +132,10 @@ if (emailBodyText.length) {
 	</div>
 </div>
 
-<div id="documentSettings" style="display:none;margin-top:60px" class="link">
+<div id="fileAndFolderSettings" style="display:none;margin-top:60px" class="link">
 
 	<div style="background-color:#4285f4;padding:0;text-align:center" class="header">
-		<h5 style="color:white;display:inline-block;margin:10px;font-size:1.3em">Document Settings</h5>
+		<h5 style="color:white;display:inline-block;margin:10px;font-size:1.3em">File & Folder Settings</h5>
 	</div>
 
 	<div style="padding:0 15px">
@@ -148,7 +148,7 @@ if (emailBodyText.length) {
 				<?
 
 				if (!documentTemplateUrl) { ?>
-					<span id="documentTemplateUrlSpan" style="text-align: center;overflow:scroll;display:inline-block;font-size:16px;width:100%;white-space:nowrap;height:35px">[] no url ]</span><?
+					<span id="documentTemplateUrlSpan" style="text-align: center;overflow:scroll;display:inline-block;font-size:16px;width:100%;white-space:nowrap;height:35px">[ no url ]</span><?
 				} else { ?>
 					<span id="documentTemplateUrlSpan" style="overflow:scroll;display:inline-block;font-size:16px;width:100%;white-space:nowrap;height:35px"><?=documentTemplateUrl;?></span><?
 				} ?>
@@ -255,7 +255,7 @@ if (emailBodyText.length) {
 
 	<div style="padding:0 15px">
 
-		<h5>To: (column name)</h5>
+		<h5>Recipient Email (col name)</h5>
 		<div class="shadowBox">
 
 			<div id="emailToColNameDiv" style="margin-top:20px;width:100%">
