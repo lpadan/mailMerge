@@ -203,6 +203,7 @@ function processRow(data) {
     var rowNum = data.rowNum;
 
     if (sheet.isRowHiddenByFilter(rowNum) || sheet.isRowHiddenByUser(rowNum)) {
+        data.success = true;
         data.rowNum ++;
         data.remainingRows --;
         return data;
@@ -270,8 +271,8 @@ function processRow(data) {
 
     pdfCreatedIndex = headers.indexOf('pdf created');
     emailSentIndex = headers.indexOf('email sent');
-    pdfSuccess = 0;
-    emailSuccess = 0;
+    pdfSuccess = false;
+    emailSuccess = false;
 
     if (rowData[pdfCreatedIndex] && rowData[emailSentIndex]) {
         data.success = true;
@@ -315,11 +316,11 @@ function processRow(data) {
                 try {
                     pdfFile = pdfFolder.createFile(pdfContentBlob).setName(pdfFileName);
                     sheet.getRange(rowNum,pdfCreatedIndex+1).setValue('yes');
-                    pdfSuccess = 1;
+                    pdfSuccess = true;
                 } catch (error) {
                     sheet.getRange(rowNum,pdfCreatedIndex+1).setValue(error);
                     sheet.getRange(rowNum,emailSentIndex+1).setValue('no');
-                    pdfSuccess = 0;
+                    pdfSuccess = false;
                     sheet.getRange(rowNum,1,1,headers.length).setBackground("#ffcccc"); // red
                     data.success = true;
                     data.remainingRows --;
@@ -328,7 +329,7 @@ function processRow(data) {
                 }
             }
         } else {
-            pdfSuccess = 1;
+            pdfSuccess = true;
             sheet.getRange(rowNum,pdfCreatedIndex+1).setValue('n/a');
         }
     } else {
@@ -340,7 +341,7 @@ function processRow(data) {
         if (!rowData[emailSentIndex]) { // no value in email sent column
 
             if (!rowData[emailToIndex]) { // email To: address is blank
-                emailSuccess = 0;
+                emailSuccess = false;
                 sheet.getRange(rowNum,emailSentIndex+1).setValue('no email address');
             } else {
                 emailAddress = rowData[emailToIndex];
@@ -358,12 +359,12 @@ function processRow(data) {
                 }
 
                 try {
-
                     if (includePdfAttachment) {
+
                         if (!pdfFile) {
                             pdfContentBlob.setName(pdfFileName);
                             pdfFile = pdfContentBlob;
-                            pdfSuccess = 1;
+                            pdfSuccess = true;
                         }
                         MailApp.sendEmail(emailAddress,emailSubject,null, {
                             attachments: [pdfFile],
@@ -375,21 +376,21 @@ function processRow(data) {
                             htmlBody: emailBody
                       });
                     }
-
                   sheet.getRange(rowNum,emailSentIndex+1).setValue('yes');
-                  emailSuccess = 1;
+                  emailSuccess = true;
+
                 } catch (error) {
                   sheet.getRange(rowNum,emailSentIndex+1).setValue(error);
-                  emailSuccess = 0;
+                  emailSuccess = false;
                   sheet.getRange(rowNum,1,1,headers.length).setBackground("#ffcccc"); // red
                 }
             }
         } else { // email has value in column
-            emailSuccess = 1;
+            emailSuccess = false;
         }
 
     } else { // do not send emails
-        emailSuccess = 1;
+        emailSuccess = true;
         sheet.getRange(rowNum,emailSentIndex+1).setValue('n/a');
     }
 
