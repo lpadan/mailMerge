@@ -412,7 +412,7 @@ function processRow(data) {
 	if (!data.success) {
 		$('#alertMessage').text(data.errorMessage);
 		alertModal.open();
-		success();
+		hideToast();
 		return;
 	}
 	var numRows = data.numRows;
@@ -438,14 +438,14 @@ function successProcessRow(data){
     if (!data.success) {
 		$('#alertMessage').text(data.errorMessage);
 		alertModal.open();
-		success();
+		hideToast();
 		return;
 	}
     else if (data.remainingRows > 0) {
     	google.script.run.withSuccessHandler(successProcessRow).processRow(data);
 
     } else {
-    	success();
+    	hideToast();
     	return;
     }
 }
@@ -462,7 +462,7 @@ function successSaveDocumentTemplateUrl(data) {
 		$('#alertMessage').text(data.errorMessage);
 		alertModal.open();
 	}
-	success();
+	hideToast();
 }
 
 function successSavePdfFolderUrl(data) {
@@ -479,7 +479,7 @@ function successSavePdfFolderUrl(data) {
 		$('#alertMessage').text(data.errorMessage);
 		alertModal.open();
 	}
-	success();
+	hideToast();
 }
 
 function successSaveTempFolderUrl(data) {
@@ -496,7 +496,7 @@ function successSaveTempFolderUrl(data) {
 		$('#alertMessage').text(data.errorMessage);
 		alertModal.open();
 	}
-	success();
+	hideToast();
 }
 
 function successSavePdfFileName(data) {
@@ -508,7 +508,7 @@ function successSavePdfFileName(data) {
 		$('#savePdfFileNameBtn').hide();
 		$('#editPdfFileNameBtn').show();
 	}
-	success();
+	hideToast();
 }
 
 function successSaveEmailToColName(data) {
@@ -523,7 +523,7 @@ function successSaveEmailToColName(data) {
 		$('#alertMessage').text(data.errorMessage);
 		alertModal.open();
 	}
-	success();
+	hideToast();
 }
 
 function successSaveEmailSubject(data) {
@@ -554,7 +554,7 @@ function successSaveEmailBodyText(data) {
 		$('#saveEmailTextBtn').hide();
 		$('#editEmailTextBtn').show();
 	}
-	success();
+	hideToast();
 }
 
 function successSaveEmailBodyHtml(data) {
@@ -571,7 +571,7 @@ function successSaveEmailBodyHtml(data) {
 		$('#saveEmailHtmlBtn').hide();
 		$('#editEmailHtmlBtn').show();
 	}
-	success();
+	hideToast();
 }
 
 
@@ -593,7 +593,7 @@ function objectifyForm(formArray) {
 	return returnArray;
 }
 
-function success() {
+function hideToast() {
 	$('#mask').hide();
 	$('#toast').css('transform','');
 }
