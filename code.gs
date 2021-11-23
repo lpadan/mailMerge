@@ -1,8 +1,8 @@
-function help() {
-    var html = HtmlService.createTemplateFromFile('help');
-    html = html.evaluate().setWidth(750).setHeight(700);
-    SpreadsheetApp.getUi().showModalDialog(html, ' Mail Merge - Help');
-}
+// function help() {
+//     var html = HtmlService.createTemplateFromFile('help');
+//     html = html.evaluate().setWidth(750).setHeight(700);
+//     SpreadsheetApp.getUi().showModalDialog(html, ' Mail Merge - Help');
+// }
 
 function openSidebar() {
     ui = SpreadsheetApp.getUi();
@@ -31,15 +31,15 @@ function openSidebar() {
 
     var data = {};
 
-    var userProperties = PropertiesService.getUserProperties();
-    data.documentTemplateUrl = userProperties.getProperty('documentTemplateUrl');
-    data.pdfFolderUrl = userProperties.getProperty('pdfFolderUrl');
-    data.tempFolderUrl = userProperties.getProperty('tempFolderUrl');
-    data.pdfFileName = userProperties.getProperty('pdfFileName');
-    data.emailToColName = userProperties.getProperty('emailToColName');
-    data.emailSubject = userProperties.getProperty('emailSubject');
-    data.emailBodyHtml = userProperties.getProperty('emailBodyHtml');
-    data.emailBodyText = userProperties.getProperty('emailBodyText');
+    var documentProperties = PropertiesService.getDocumentProperties();
+    data.documentTemplateUrl = documentProperties.getProperty('documentTemplateUrl');
+    data.pdfFolderUrl = documentProperties.getProperty('pdfFolderUrl');
+    data.tempFolderUrl = documentProperties.getProperty('tempFolderUrl');
+    data.pdfFileName = documentProperties.getProperty('pdfFileName');
+    data.emailToColName = documentProperties.getProperty('emailToColName');
+    data.emailSubject = documentProperties.getProperty('emailSubject');
+    data.emailBodyHtml = documentProperties.getProperty('emailBodyHtml');
+    data.emailBodyText = documentProperties.getProperty('emailBodyText');
 
     var html = HtmlService.createTemplateFromFile('sidebar');
     html.data = data;
@@ -64,8 +64,8 @@ function saveDocumentTemplateUrl(url) {
         data.errorMessage = "Template Document not found";
         return data;
     }
-    var userProperties = PropertiesService.getUserProperties();
-    userProperties.setProperty('documentTemplateUrl',url.trim());
+    var documentProperties = PropertiesService.getDocumentProperties();
+    documentProperties.setProperty('documentTemplateUrl',url.trim());
     data.success = true;
     data.url = url;
     return data;
@@ -87,8 +87,8 @@ function savePdfFolderUrl(url) {
         data.errorMessage = "PDF Folder not found";
         return data;
     }
-    var userProperties = PropertiesService.getUserProperties();
-    userProperties.setProperty('pdfFolderUrl',url.trim());
+    var documentProperties = PropertiesService.getDocumentProperties();
+    documentProperties.setProperty('pdfFolderUrl',url.trim());
     data.success = true;
     data.url = url;
     return data;
@@ -110,8 +110,8 @@ function saveTempFolderUrl(url) {
         data.errorMessage = ("Temp Folder not found");
         return data;
     }
-    var userProperties = PropertiesService.getUserProperties();
-    userProperties.setProperty('tempFolderUrl',url.trim());
+    var documentProperties = PropertiesService.getDocumentProperties();
+    documentProperties.setProperty('tempFolderUrl',url.trim());
     data.success = true;
     data.url = url;
     return data;
@@ -119,8 +119,8 @@ function saveTempFolderUrl(url) {
 
 function savePdfFileName(fileName) {
     var data = {};
-    var userProperties = PropertiesService.getUserProperties();
-    userProperties.setProperty('pdfFileName',fileName.trim());
+    var documentProperties = PropertiesService.getDocumentProperties();
+    documentProperties.setProperty('pdfFileName',fileName.trim());
     data.success = true;
     data.fileName = fileName;
     return data;
@@ -136,8 +136,8 @@ function saveEmailToColName(colName) {
         data.errorMessage = "Column name not found";
         return data;
     }
-    var userProperties = PropertiesService.getUserProperties();
-    userProperties.setProperty('emailToColName',colName.trim());
+    var documentProperties = PropertiesService.getDocumentProperties();
+    documentProperties.setProperty('emailToColName',colName.trim());
     data.success = true;
     data.colName = colName;
     return data;
@@ -145,16 +145,16 @@ function saveEmailToColName(colName) {
 
 function saveEmailSubject(subject) {
     var data = {};
-    var userProperties = PropertiesService.getUserProperties();
-    userProperties.setProperty('emailSubject',subject.trim());
+    var documentProperties = PropertiesService.getDocumentProperties();
+    documentProperties.setProperty('emailSubject',subject.trim());
     data.success = true;
     data.subject = subject;
     return data;
 }
 
 function saveEmailBodyText(emailBodyText) {
-    var userProperties = PropertiesService.getUserProperties();
-    userProperties.setProperty('emailBodyText',emailBodyText.trim());
+    var documentProperties = PropertiesService.getDocumentProperties();
+    documentProperties.setProperty('emailBodyText',emailBodyText.trim());
     data = {};
     data.success = true;
     data.emailBodyText = emailBodyText;
@@ -162,8 +162,8 @@ function saveEmailBodyText(emailBodyText) {
 }
 
 function saveEmailBodyHtml(emailBodyHtml) {
-    var userProperties = PropertiesService.getUserProperties();
-    userProperties.setProperty('emailBodyHtml',emailBodyHtml.trim());
+    var documentProperties = PropertiesService.getDocumentProperties();
+    documentProperties.setProperty('emailBodyHtml',emailBodyHtml.trim());
     data = {};
     data.success = true;
     data.emailBodyHtml = emailBodyHtml;
@@ -222,11 +222,11 @@ function processRow(data) {
     if (!createPdfFiles) includePdfAttachment = null;
 
     // file and folder settings
-    var userProperties = PropertiesService.getUserProperties();
-    var documentTemplateUrl = userProperties.getProperty('documentTemplateUrl');
-    var pdfFolderUrl = userProperties.getProperty('pdfFolderUrl');
-    var tempFolderUrl = userProperties.getProperty('tempFolderUrl');
-    var pdfFileName = userProperties.getProperty('pdfFileName');
+    var documentProperties = PropertiesService.getDocumentProperties();
+    var documentTemplateUrl = documentProperties.getProperty('documentTemplateUrl');
+    var pdfFolderUrl = documentProperties.getProperty('pdfFolderUrl');
+    var tempFolderUrl = documentProperties.getProperty('tempFolderUrl');
+    var pdfFileName = documentProperties.getProperty('pdfFileName');
 
     if (createPdfFiles) {
         if (!documentTemplateUrl || !pdfFolderUrl || !tempFolderUrl || !pdfFileName) {
@@ -245,10 +245,10 @@ function processRow(data) {
 
     if (sendEmails) {
         var emailType = data.emailType;
-        var emailToColName = userProperties.getProperty('emailToColName');
-        var emailSubject = userProperties.getProperty('emailSubject');
-        var emailBodyHtml = userProperties.getProperty('emailBodyHtml');
-        var emailBodyText = userProperties.getProperty('emailBodyText');
+        var emailToColName = documentProperties.getProperty('emailToColName');
+        var emailSubject = documentProperties.getProperty('emailSubject');
+        var emailBodyHtml = documentProperties.getProperty('emailBodyHtml');
+        var emailBodyText = documentProperties.getProperty('emailBodyText');
         if (!emailToColName || !emailSubject || !(emailBodyHtml || emailBodyText)) {
             data.success = false;
             data.errorMessage = "Please fill out all Email Settings";
@@ -306,9 +306,9 @@ function processRow(data) {
             pdfFileName = pdfFileName.replace("{" + headers[j] + "}", rowData[j]);
         }
 
+        var pdfContentBlob = tempDocFile.getAs(MimeType.PDF);
         tempDocFile.saveAndClose();
-        var pdfContentBlob = tempFile.getAs(MimeType.PDF);
-        tempFolder.removeFile(tempFile);
+        Drive.Files.remove(tempFile.getId()); // only way to truly delete a file.  remove() simply removes it from its parent folder. orphaned.
 
         if (savePdfFiles) {
 

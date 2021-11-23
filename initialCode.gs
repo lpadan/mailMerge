@@ -10,7 +10,7 @@ function onOpen(e) {
 	// .addItem("Open Sidebar",'openSidebar')
 	// .addToUi();
 
-	//container bound code
+	// container bound code
 	ui = SpreadsheetApp.getUi();
 	ui.createMenu('Mail Merge')
 	.addItem("Open Sidebar",'openSidebar')

@@ -39,3 +39,13 @@ function formatDisplaySheet(sheet) {
     }
 }
 
+function deleteUserProperties () {
+    var userProperties = PropertiesService.getUserProperties();
+    userProperties.deleteAllProperties();
+}
+
+function deleteDocumentProperties() {
+    var documentProperties = PropertiesService.getDocumentProperties();
+    documentProperties.deleteAllProperties();
+}
+

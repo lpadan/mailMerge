@@ -300,6 +300,22 @@ $('#mergeAndEmailLink').click(function(e){
 	$('.sidenav').sidenav('close');
 });
 
+$('#deleteSettingsLink').click(function(e) {
+	e.preventDefault();
+	$('#dialogMessage').text("Delete all settings?");
+	dialogModal.open();
+	$('#okayBtn').off('click');
+	$('#okayBtn').click(function(){
+		showToast();
+		google.script.run.withSuccessHandler(successDeleteDocumentProperties).deleteDocumentProperties();
+	});
+
+});
+
+function successDeleteDocumentProperties() {
+	hideToast();
+}
+
 $('#sendEmails').change(function(){
 
 	if ($(this).prop("checked") == true) {
@@ -348,10 +364,10 @@ $('input[name=emailType]').change(function() {
 	}
 });
 
-$('#help').click(function() {
+// $('#help').click(function() {
 
-	google.script.run.help();
-});
+// 	google.script.run.help();
+// });
 
 $('#mergeAndEmailBtn').click(function(e) {
 	e.preventDefault();
@@ -596,6 +612,11 @@ function objectifyForm(formArray) {
 function hideToast() {
 	$('#mask').hide();
 	$('#toast').css('transform','');
+}
+
+function showToast() {
+	$('#mask').show();
+	$('#toast').css('transform','translateY(-60px)');
 }
 
 </script>
