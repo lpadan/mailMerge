@@ -1,9 +1,3 @@
-// function help() {
-//     var html = HtmlService.createTemplateFromFile('help');
-//     html = html.evaluate().setWidth(750).setHeight(700);
-//     SpreadsheetApp.getUi().showModalDialog(html, ' Mail Merge - Help');
-// }
-
 function openSidebar() {
     ui = SpreadsheetApp.getUi();
     var ss = SpreadsheetApp.getActiveSpreadsheet();
