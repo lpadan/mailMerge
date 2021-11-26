@@ -6,6 +6,11 @@
    	} else if (type == 'text') {
    		var emailBody = documentProperties.getProperty('emailBodyText');
    		if (emailBody) emailBody = emailBody.replace(/\n/g,'<br>');
+   	} else if (type == 'draft') {
+   		// get first draft message body
+   		var draft = GmailApp.getDrafts()[0]; // Get the first draft message in your drafts folder
+        var body = draft.getMessage().getBody();
+        emailBody = body;
    	}
 
 ?>
@@ -26,13 +31,24 @@
 	table {
 		border-collapse:unset!important
 	}
+
+	.gmail_default {
+		font-size: medium!important;
+	}
+
+	body {
+		overflow: scroll;
+	}
+
+
 </style>
 
 <body style="margin:0 auto;width:650px">
+
 	<?
 
 	if (type == 'text') { ?>
-		<h6><?!= emailBody;?></h6> <?
+		<div class="gmail_default"><?!= emailBody;?></div> <?
 	} else { ?>
 		<?!= emailBody;?><?
 	} ?>

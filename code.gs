@@ -164,25 +164,87 @@ function saveEmailBodyHtml(emailBodyHtml) {
     return data;
 }
 
-function largeFormat(type) {
+function viewLargeFormat(type) {
     var html = HtmlService.createTemplateFromFile('largeFormat');
     html.type = type;
     html = html.evaluate().setHeight(750).setWidth(750);
     SpreadsheetApp.getUi().showModalDialog(html, 'Email Body');
 }
 
-function getNumRows(){
+function getInitialData(emailType,sendEmails){
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName('[Display]');
     sheet.activate();
     var data = {};
     if (sheet == null) {
         data.success = false;
-        data.errorMessage = 'The Sheet "[Display]" was not found.  Operation terminated';
+        data.errorMessage = 'The [Display] sheet was not found';
         return data;
     }
     var numRows = sheet.getLastRow();
-    data.headers = sheet.getDataRange().offset(1,0,1).getValues()[0]; // 1D array
+    headers = sheet.getDataRange().offset(1,0,1).getValues()[0]; // 1D array
+
+    var result = headers.includes('[ pdf ]');
+    if (!result) {
+        data.success = false;
+        data.errorMessage = '[ pdf ] column was not found';
+        return data;
+    }
+
+    var result = headers.includes('[ email ]');
+    if (!result) {
+        data.success = false;
+        data.errorMessage = '[ email ] column was not found';
+        return data;
+    }
+
+    if (sendEmails) {
+        var documentProperties = PropertiesService.getDocumentProperties();
+        var emailToColName = documentProperties.getProperty('emailToColName');
+        var emailSubject = documentProperties.getProperty('emailSubject');
+        var emailBodyHtml = documentProperties.getProperty('emailBodyHtml');
+        var emailBodyText = documentProperties.getProperty('emailBodyText');
+
+
+        if (!emailToColName || !emailSubject) {
+            data.success = false;
+            data.errorMessage = "Recipient address or Subject is missing";
+            return data;
+        }
+        if (emailType == 'text' && !emailBodyText) {
+            data.success = false;
+            data.errorMessage = "Email text body is empty";
+            return data;
+        }
+
+        if (emailType == 'html' && !emailBodyHtml) {
+            data.success = false;
+            data.errorMessage = "Email HTML body is empty";
+            return data;
+        }
+
+        if (emailType == 'draft') {
+            var drafts = GmailApp.getDrafts();// Get all draft messages in your drafts folder
+            if (!drafts.length) {
+                data.success = false;
+                data.errorMessage = "Email draft not found";
+                return data;
+            }
+            var draftBody = drafts[0].getMessage().getBody();
+            data.draftBody = draftBody;
+        } else {
+            data.draftBody = null;
+        }
+
+        emailToIndex = headers.indexOf(emailToColName);
+        if (emailToIndex == -1) {
+            data.success = false;
+            data.errorMessage = "Recipient Email Column not found";
+            return data;
+        }
+    }
+
+    data.headers = headers;
     data.numRows = numRows -2;
     data.success = true;
     return data;
@@ -190,7 +252,7 @@ function getNumRows(){
 
 function processRow(data) {
 
-    var emailAddress,emailBody,emailSentIndex,headers,i,index,emailIindexj,pdfFile,pdfFiles,pdfCreatedIndex,sheet,emailSuccess,pdfSuccess,replace,re;
+    var emailAddress,emailBody,emailColIndex,emailToIndex,emailSuccess,emailSendSuccess,headers,i,index,j,pdfFile,pdfFiles,pdfColIndex,sheet,emailSuccess,pdfSuccess,replace,re;
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     sheet = ss.getSheetByName("[Display]");
 
@@ -243,46 +305,30 @@ function processRow(data) {
         var emailSubject = documentProperties.getProperty('emailSubject');
         var emailBodyHtml = documentProperties.getProperty('emailBodyHtml');
         var emailBodyText = documentProperties.getProperty('emailBodyText');
-        if (!emailToColName || !emailSubject || !(emailBodyHtml || emailBodyText)) {
-            data.success = false;
-            data.errorMessage = "Please fill out all Email Settings";
-            return data;
-        }
-        if ((emailType == 'text' && !emailBodyText) || (emailType == 'html' && !emailBodyHtml)) {
-            data.success = false;
-            data.errorMessage = "Email Body is empty";
-            return data;
-        }
+        emailToIndex = headers.indexOf(emailToColName);
     }
 
-    emailToIndex = headers.indexOf(emailToColName);
+    pdfColIndex = headers.indexOf('[ pdf ]');
+    emailColIndex = headers.indexOf('[ email ]');
 
-    if (emailToIndex == -1 && sendEmails) {
-        data.success = false;
-        data.errorMessage = "Recipient Email Column not found";
-        return data;
-    }
-
-    pdfCreatedIndex = headers.indexOf('pdf created');
-    emailSentIndex = headers.indexOf('email sent');
     pdfSuccess = false;
-    emailSuccess = false;
+    emailSendSuccess = false;
 
-    if (rowData[pdfCreatedIndex] && rowData[emailSentIndex]) {
+    if (rowData[pdfColIndex] && rowData[emailColIndex]) {
         data.success = true;
         data.remainingRows --;
         data.rowNum ++;
         return data;
     }
 
-    if (createPdfFiles && rowData[pdfCreatedIndex] && !sendEmails) {
+    if (createPdfFiles && rowData[pdfColIndex] && !sendEmails) {
         data.success = true;
         data.remainingRows --;
         data.rowNum ++;
         return data;
     }
 
-    if (rowData[emailSentIndex] && sendEmails && !createPdfFiles) {
+    if (rowData[emailColIndex] && sendEmails && !createPdfFiles) {
         data.success = true;
         data.remainingRows --;
         data.rowNum ++;
@@ -291,8 +337,17 @@ function processRow(data) {
 
     if (createPdfFiles) {
 
-        var tempFile = docFile.makeCopy(tempFolder);
-        var tempDocFile = DocumentApp.openById(tempFile.getId());
+        // explore if possible to make a copy of file in memory (couldn't find a way)
+        // 4.0 seconds to make a copy and delete it (3.5 and .5)
+        // sample timer
+        // var startSeconds = new Date().getTime();
+        // var tempFile = docFile.makeCopy(tempFolder);
+        // var endSeconds = new Date().getTime();
+        // var duration = (endSeconds - startSeconds)/1000;
+        // console.log("copy docFile = " + duration);
+
+        var tempFile = docFile.makeCopy(tempFolder); // avg duration 3.5 seconds
+        var tempDocFile = DocumentApp.openById(tempFile.getId()); // avg duration .1 seconds
         var body = tempDocFile.getBody();
 
         for (j = 0; j < headers.length; j++) {
@@ -300,20 +355,19 @@ function processRow(data) {
             pdfFileName = pdfFileName.replace("{" + headers[j] + "}", rowData[j]);
         }
 
-        var pdfContentBlob = tempDocFile.getAs(MimeType.PDF);
+        var pdfContentBlob = tempDocFile.getAs(MimeType.PDF); // avg duration .1 seconds
         tempDocFile.saveAndClose();
-        Drive.Files.remove(tempFile.getId()); // only way to truly delete a file.  remove() simply removes it from its parent folder. orphaned.
 
         if (savePdfFiles) {
 
-            if (!rowData[pdfCreatedIndex]) {
+            if (!rowData[pdfColIndex]) {
                 try {
-                    pdfFile = pdfFolder.createFile(pdfContentBlob).setName(pdfFileName);
-                    sheet.getRange(rowNum,pdfCreatedIndex+1).setValue('yes');
+                    pdfFile = pdfFolder.createFile(pdfContentBlob).setName(pdfFileName); // avg duration 2.5 seconds
+                    sheet.getRange(rowNum,pdfColIndex+1).setValue('created & saved').setHorizontalAlignment('center');
                     pdfSuccess = true;
                 } catch (error) {
-                    sheet.getRange(rowNum,pdfCreatedIndex+1).setValue(error);
-                    sheet.getRange(rowNum,emailSentIndex+1).setValue('no');
+                    sheet.getRange(rowNum,pdfColIndex+1).setValue(error).setHorizontalAlignment('left');
+                    sheet.getRange(rowNum,emailColIndex+1).setValue('not sent').setHorizontalAlignment('center');
                     pdfSuccess = false;
                     sheet.getRange(rowNum,1,1,headers.length).setBackground("#ffcccc"); // red
                     data.success = true;
@@ -324,32 +378,50 @@ function processRow(data) {
             }
         } else {
             pdfSuccess = true;
-            sheet.getRange(rowNum,pdfCreatedIndex+1).setValue('n/a');
+            sheet.getRange(rowNum,pdfColIndex+1).setValue('created');
         }
     } else {
         pdfSuccess = 1;
-        sheet.getRange(rowNum,pdfCreatedIndex+1).setValue('n/a');
+        sheet.getRange(rowNum,pdfColIndex+1).setValue('n/a').setHorizontalAlignment('center');
     }
 
     if (sendEmails) {
-        if (!rowData[emailSentIndex]) { // no value in email sent column
+
+        if (!rowData[emailColIndex]) { // no value in email sent column
 
             if (!rowData[emailToIndex]) { // email To: address is blank
                 emailSuccess = false;
-                sheet.getRange(rowNum,emailSentIndex+1).setValue('no email address');
+                sheet.getRange(rowNum,emailColIndex+1).setValue('no email address');
             } else {
                 emailAddress = rowData[emailToIndex];
-
-                if (emailType == 'text') {
-                    emailBody = emailBodyText;
-                    for (j = 0; j < headers.length; j++) {
-                        replace = "{" + headers[j] + "}";
-                        re = new RegExp(replace,"g"); // global replace
-                        emailBody = emailBody.replace(re,rowData[j]);
+                if (emailType == 'draft') {
+                    emailBody = data.draftBody;
+                    if (emailBody) {
+                        for (j = 0; j < headers.length; j++) {
+                            replace = "{" + headers[j] + "}";
+                            re = new RegExp(replace,"g"); // global replace
+                            emailBody = emailBody.replace(re,rowData[j]);
+                        }
                     }
-                    emailBody = emailBody.replace(/\n/g,'<br>');
-                } else if (emailType == 'html') {
+                }
+
+                else if (emailType == 'text') {
+                    emailBody = emailBodyText;
+                    if (emailBody) {
+                        for (j = 0; j < headers.length; j++) {
+                            replace = "{" + headers[j] + "}";
+                            re = new RegExp(replace,"g"); // global replace
+                            emailBody = emailBody.replace(re,rowData[j]);
+                        }
+                        emailBody = emailBody.replace(/\n/g,'<br>');
+                    }
+                }
+
+                else if (emailType == 'html') {
                     emailBody = emailBodyHtml;
+                    if (!emailBody) {
+                        emailBodyMessage = "Email HTML was empty";
+                    }
                 }
 
                 try {
@@ -370,14 +442,16 @@ function processRow(data) {
                             htmlBody: emailBody
                       });
                     }
-                  sheet.getRange(rowNum,emailSentIndex+1).setValue('yes');
+                  sheet.getRange(rowNum,emailColIndex+1).setValue('sent').setHorizontalAlignment('center');
                   emailSuccess = true;
 
                 } catch (error) {
-                  sheet.getRange(rowNum,emailSentIndex+1).setValue(error);
+                  sheet.getRange(rowNum,emailColIndex+1).setValue(error).setHorizontalAlignment('left');
                   emailSuccess = false;
                   sheet.getRange(rowNum,1,1,headers.length).setBackground("#ffcccc"); // red
                 }
+
+
             }
         } else { // email has value in column
             emailSuccess = false;
@@ -385,13 +459,18 @@ function processRow(data) {
 
     } else { // do not send emails
         emailSuccess = true;
-        sheet.getRange(rowNum,emailSentIndex+1).setValue('n/a');
+        sheet.getRange(rowNum,emailColIndex+1).setValue('n/a').setHorizontalAlignment('center');
     }
 
     if (pdfSuccess && emailSuccess) {
         sheet.getRange(rowNum,1,1,headers.length).setBackground("#e6ffe6"); // green
-    } else {
-       sheet.getRange(rowNum,1,1,headers.length).setBackground("#ffcccc"); // red
+    }
+
+    if (createPdfFiles) {
+        // moved to here due to erros in creating the PDF file...TEST
+        // only way to truly delete a file.  DriveApp.remove() simply removes its parent folder
+        // optionally can setTrashed() and it goes in the trash for 30 days.  Might be less expensive, haven't checked
+        Drive.Files.remove(tempFile.getId()); // avg duration .5 seconds
     }
 
     data.success = true;

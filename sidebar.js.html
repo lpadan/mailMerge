@@ -1,14 +1,18 @@
 <script>
 
-$('#largeFormat').click(function() {
+$('#viewLargeFormat').click(function() {
 	var type = $('input[name=emailType]:checked').val();
 	// ADD
 	// add ablity to edit from within large modal
 	// then need to know if in edit mode or display mode before displaying
 	// set a session variable when either is clicked
-	google.script.run.largeFormat(type);
+	showToast();
+	google.script.run.withSuccessHandler(successViewLargeFormat).viewLargeFormat(type);
 });
 
+function successViewLargeFormat() {
+	hideToast();
+}
 
 
 $('#editEmailTextBtn').click(function(){
@@ -355,19 +359,23 @@ $('#closeMenu').click(function(e){
 $('input[name=emailType]').change(function() {
 
 	var type = $(this).val();
-	if (type == 'text') {
+	if (type == 'draft') {
+		$('#emailBodyDraft').show();
+		$('#emailBodyTextDiv').hide();
+		$('#emailBodyHtmlDiv').hide();
+	}
+	else if (type == 'text') {
 		$('#emailBodyTextDiv').show();
 		$('#emailBodyHtmlDiv').hide();
-	} else if (type == 'html') {
+		$('#emailBodyDraft').hide();
+	}
+	else if (type == 'html') {
 		$('#emailBodyTextDiv').hide();
 		$('#emailBodyHtmlDiv').show();
+		$('#emailBodyDraft').hide();
+
 	}
 });
-
-// $('#help').click(function() {
-
-// 	google.script.run.help();
-// });
 
 $('#mergeAndEmailBtn').click(function(e) {
 	e.preventDefault();
@@ -417,9 +425,9 @@ $('#mergeAndEmailBtn').click(function(e) {
 	dialogModal.open();
 	$('#okayBtn').off('click');
 	$('#okayBtn').click(function(){
-		$('#mask').show();
-		$('#toast').css('transform','translateY(-60px)');
-		google.script.run.withSuccessHandler(processRow).getNumRows();
+		showToast();
+		var emailType = $('input[name=emailType]:checked').val();
+		google.script.run.withSuccessHandler(processRow).getInitialData(emailType,formData.sendEmails);
 	});
 });
 
@@ -431,6 +439,7 @@ function processRow(data) {
 		hideToast();
 		return;
 	}
+	var draftBody = data.draftBody;
 	var numRows = data.numRows;
 	var headers = data.headers;
 	data = {};
@@ -447,6 +456,7 @@ function processRow(data) {
 	}
 
 	data.headers = headers;
+	data.draftBody = draftBody;
 	google.script.run.withSuccessHandler(successProcessRow).processRow(data);
 }
 

@@ -9,12 +9,12 @@ var emailSubject = data.emailSubject;
 var emailBodyHtml = data.emailBodyHtml;
 var emailBodyText = data.emailBodyText;
 
-if (emailBodyHtml && emailBodyHtml.length) var type = 'html';
+//if (emailBodyHtml && emailBodyHtml.length) var type = 'html';
 if (emailBodyText && emailBodyText.length) {
 	var emailBody = emailBodyText.replace(/\n/g,"<br>");
-	var type = 'text';
+	//var type = 'text';
 } else {
-	var type = 'text';
+	//var type = 'text';
 }
 
 ?>
@@ -312,46 +312,33 @@ if (emailBodyText && emailBodyText.length) {
 		<div style="margin:30px 0 .656rem 0">
 			<h5 style="display:inline;">Body</h5>
 
-			<?
-			if (type == 'html') { ?>
-				<label style="margin-left:15px">
-					<input name="emailType" type="radio" checked value="html" />
-					<span style="padding-left:25px">html</span>
-				</label>
+			<label style="margin-left:10px">
+				<input name="emailType" type="radio" checked value="draft" />
+				<span style="padding-left:25px">draft</span>
+			</label>
 
-				<label>
-					<input name="emailType" type="radio" value="text" />
-					<span style="padding-left:25px">text</span>
-				</label> <?
-			} else if (type == 'text') { ?>
-				<label style="margin-left:15px">
-					<input name="emailType" type="radio" value="html" />
-					<span style="padding-left:25px">html</span>
-				</label>
+			<label style="margin-left:5px">
+				<input name="emailType" type="radio" value="html" />
+				<span style="padding-left:25px">html</span>
+			</label>
 
-				<label>
-					<input name="emailType" type="radio" checked value="text" />
-					<span style="padding-left:25px">text</span>
-				</label> <?
-			}?>
+			<label style="margin-left:5px">
+				<input name="emailType" type="radio" value="text" />
+				<span style="padding-left:25px">text</span>
+			</label>
 
-			<a id="largeFormat" style="cursor:pointer;margin-left:15px;color:#4285f4">large format</a>
+			<div style="text-align:center;margin-top:5px">
+				<a id="viewLargeFormat" style="cursor:pointer;margin-left:15px;color:#4285f4">view large format</a>
+			</div>
 		</div>
 
 		<div class="shadowBox">
 
-			<?
-			if (type == 'text') {?>
+				<div id="emailBodyDraft" style="margin-bottom: 20px;text-align: center;height: 250px;overflow:scroll;display:block;font-size:16px;width:100%;padding-top:10px">[ use first draft in Drafts folder ]</div>
 
-				<div id="emailBodyTextDiv" style="margin-top:10px;width:100%"> <?
-
-			}  else {?>
 
 				<div id="emailBodyTextDiv" style="margin-top:10px;width:100%" hidden> <?
 
-			} ?>
-
-				<?
 				if (!emailBodyText) { ?>
 					<div id="emailBodyText" style="margin-bottom: 20px;text-align: center;height: 250px;overflow:scroll;display:block;font-size:16px;width:100%">[ no body ]</div><?
 				} else { ?>
@@ -373,16 +360,8 @@ if (emailBodyText && emailBodyText.length) {
 
 			</div>
 
-			<?
-			if (type == 'html') { ?>
 
-				<div id="emailBodyHtmlDiv" style="margin-top:10px;width:100%"> <?
-
-			} else { ?>
-
-				<div id="emailBodyHtmlDiv" style="margin-top:10px;width:100%" hidden> <?
-
-			} ?>
+			<div id="emailBodyHtmlDiv" style="margin-top:10px;width:100%" hidden>
 
 				<?
 				if (!emailBodyHtml) { ?>

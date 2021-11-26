@@ -1,8 +1,10 @@
+
 function testRunTime(timesRun=0) {
     // ran on 11/9/2021 and ran for 30 minutes
     if (timesRun > 0) console.log(`ran ${timesRun} times`);
-    Utilities.sleep(30000);
+    Utilities.sleep(5000);
     testRunTime(timesRun + 1);
+
 }
 
 function getId(Url) {
@@ -24,11 +26,11 @@ function formatDisplaySheet(sheet) {
 
     sheet.setRowHeight(1,43);
     sheet.getRange("A1:I1").setFontSize(13).setVerticalAlignment('middle').setFontColor('white').setBackgroundColor('#4285f4');
-    sheet.getRange("A1:I1").mergeAcross().setHorizontalAlignment('left');
-    sheet.getRange("A1").setValue('    M A I L   M E R G E');
+    sheet.getRange("A1:I1").mergeAcross().setHorizontalAlignment('center');
+    sheet.getRange("A1").setValue('M A I L   M E R G E');
 
     sheet.setRowHeight(2,30);
-    var values = ['column 1','column 2','column 3','column 4','column 5','column 6','column 7','pdf created','email sent'];
+    var values = ['heading 1','heading 2','heading 3','heading 4','heading 5','heading 6','heading 7','[ pdf ]','[ email ]'];
     sheet.getRange("A2:I2").setValues([values]);
     sheet.getRange("A2:G2").setFontColor('white').setBackgroundColor('black').setFontSize(12).setHorizontalAlignment('center').setVerticalAlignment('middle');
     sheet.getRange("H2:I2").setFontColor('white').setBackgroundColor('#26a69a').setFontSize(12).setHorizontalAlignment('center').setVerticalAlignment('middle');
