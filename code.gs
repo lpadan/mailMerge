@@ -113,7 +113,7 @@ function openSidebar() {
     var html = HtmlService.createTemplateFromFile('sidebar');
     html.data = data;
     html = html.evaluate();
-    html.setTitle("Merge Master");
+    html.setTitle("Mail Merge");
     SpreadsheetApp.getUi().showSidebar(html);
 }
 
