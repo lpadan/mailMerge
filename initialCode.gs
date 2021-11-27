@@ -12,7 +12,7 @@ function onOpen(e) {
 
 	// container bound code
 	// ui = SpreadsheetApp.getUi();
-	// ui.createMenu('Mail Merge')
+	// ui.createMenu('Merge Master')
 	// .addItem("Open Sidebar",'openSidebar')
 	// .addToUi();
 }

@@ -9,20 +9,18 @@ function initialize(emailType,sendEmails){
         return data;
     }
     var numRows = sheet.getLastRow();
-    headers = sheet.getDataRange().offset(1,0,1).getValues()[0]; // 1D array
+    headers = sheet.getDataRange().offset(0,0,1).getValues()[0]; // 1D array
 
-    var result = headers.includes('[ pdf ]');
-    if (!result) {
-        data.success = false;
-        data.errorMessage = '[ pdf ] column was not found';
-        return data;
+    var index = headers.indexOf('[ pdf ]');
+    if (index == -1) {
+        sheet.getRange(1,headers.length+1).setBackground('#26a69a').setHorizontalAlignment('center').setFontColor('white').setValue("[ pdf ]");
+        headers.push('[ pdf ]')
     }
 
-    var result = headers.includes('[ email ]');
-    if (!result) {
-        data.success = false;
-        data.errorMessage = '[ email ] column was not found';
-        return data;
+    index = headers.indexOf('[ email ]');
+    if (index == -1) {
+        sheet.getRange(1,headers.length+1).setBackground('#26a69a').setHorizontalAlignment('center').setFontColor('white').setValue("[ email ]");
+        headers.push('[ email ]')
     }
 
     if (sendEmails) {
@@ -84,21 +82,19 @@ function openSidebar() {
     var displaySheet = ss.getSheetByName(displaySheetName);
 
     if (!displaySheet) {
-        var response = ui.alert('Could not find sheet named "[Display]"\nCreate sheet?', ui.ButtonSet.YES_NO);
+        var response = ui.alert('Could not find sheet named [Display]\nCreate sheet?', ui.ButtonSet.YES_NO);
         if (response == ui.Button.NO) {
             return;
         }
         ss.insertSheet(displaySheetName,0);
         displaySheet = ss.getSheetByName(displaySheetName);
         displaySheet.activate();
-        formatDisplaySheet(displaySheet);
 
     } else {
         displaySheet.activate();
-        var response = ui.alert('Clear and Format Display Sheet?', ui.ButtonSet.YES_NO);
+        var response = ui.alert('Clear [Display] Sheet?', ui.ButtonSet.YES_NO);
         if (response == ui.Button.YES) {
             displaySheet.clear();
-            formatDisplaySheet(displaySheet);
         }
     }
 
@@ -117,7 +113,7 @@ function openSidebar() {
     var html = HtmlService.createTemplateFromFile('sidebar');
     html.data = data;
     html = html.evaluate();
-    html.setTitle("Mail Merge");
+    html.setTitle("Merge Master");
     SpreadsheetApp.getUi().showSidebar(html);
 }
 
@@ -235,11 +231,11 @@ function processRow(data) {
             if (!rowData[pdfColIndex]) {
                 try {
                     pdfFile = pdfFolder.createFile(pdfContentBlob).setName(pdfFileName); // avg duration 2.5 seconds
-                    sheet.getRange(rowNum,pdfColIndex+1).setValue('created & saved').setHorizontalAlignment('center');
+                    sheet.getRange(rowNum,pdfColIndex+1).setHorizontalAlignment('center').setValue('created & saved');
                     pdfSuccess = true;
                 } catch (error) {
-                    sheet.getRange(rowNum,pdfColIndex+1).setValue(error).setHorizontalAlignment('left');
-                    sheet.getRange(rowNum,emailColIndex+1).setValue('not sent').setHorizontalAlignment('center');
+                    sheet.getRange(rowNum,pdfColIndex+1).setHorizontalAlignment('left').setValue(error);
+                    sheet.getRange(rowNum,emailColIndex+1).setHorizontalAlignment('center').setValue('not sent');
                     pdfSuccess = false;
                     sheet.getRange(rowNum,1,1,headers.length).setBackground("#ffcccc"); // red
                     data.success = true;
@@ -254,7 +250,7 @@ function processRow(data) {
         }
     } else {
         pdfSuccess = true;
-        sheet.getRange(rowNum,pdfColIndex+1).setValue('n/a').setHorizontalAlignment('center');
+        sheet.getRange(rowNum,pdfColIndex+1).setHorizontalAlignment('center').setValue('n/a');
     }
 
     if (sendEmails) {
@@ -308,20 +304,20 @@ function processRow(data) {
                             attachments: [pdfFile],
                             htmlBody: emailBody
                         });
-                        sheet.getRange(rowNum,emailColIndex+1).setValue('sent w/ attachment').setHorizontalAlignment('center');
+                        sheet.getRange(rowNum,emailColIndex+1).setHorizontalAlignment('center').setValue('sent w/ attachment');
                         emailSuccess = true;
 
                     } else {
                         MailApp.sendEmail(emailAddress,emailSubject,null, {
                             htmlBody: emailBody
                         });
-                        sheet.getRange(rowNum,emailColIndex+1).setValue('sent').setHorizontalAlignment('center');
+                        sheet.getRange(rowNum,emailColIndex+1).setHorizontalAlignment('center').setValue('sent');
                         emailSuccess = true;
                     }
 
 
                 } catch (error) {
-                  sheet.getRange(rowNum,emailColIndex+1).setValue(error).setHorizontalAlignment('left');
+                  sheet.getRange(rowNum,emailColIndex+1).setHorizontalAlignment('left').setValue(error);
                   emailSuccess = false;
                   sheet.getRange(rowNum,1,1,headers.length).setBackground("#ffcccc"); // red
                 }
@@ -334,7 +330,7 @@ function processRow(data) {
 
     } else { // do not send emails
         emailSuccess = true;
-        sheet.getRange(rowNum,emailColIndex+1).setValue('n/a').setHorizontalAlignment('center');
+        sheet.getRange(rowNum,emailColIndex+1).setHorizontalAlignment('center').setValue('n/a');
     }
 
     if (pdfSuccess && emailSuccess) {
@@ -436,7 +432,7 @@ function saveEmailToColName(colName) {
     var data = {};
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName('[Display]');
-    var headers = sheet.getDataRange().offset(1,0,1).getValues()[0]; // 1D array
+    var headers = sheet.getDataRange().offset(0,0,1).getValues()[0]; // 1D array
     if (!headers.includes(colName)) {
         data.success = false;
         data.errorMessage = "Column name not found";

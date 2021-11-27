@@ -20,6 +20,7 @@ function include(filename) {
     return HtmlService.createHtmlOutputFromFile(filename).getContent();
 }
 
+// not used
 function formatDisplaySheet(sheet) {
     sheet.clear();
     sheet.getRange("A:Z").setFontSize(11);
@@ -47,6 +48,8 @@ function deleteUserProperties () {
 }
 
 function deleteDocumentProperties() {
+    // ADD
+    // reset all form values
     var documentProperties = PropertiesService.getDocumentProperties();
     documentProperties.deleteAllProperties();
 }
