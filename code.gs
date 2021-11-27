@@ -208,8 +208,9 @@ function processRow(data) {
 
     if (createPdfFiles) {
 
-        // explore if possible to make a copy of file in memory (couldn't find a way)
+        // make a copy of file in memory (couldn't find a way)
         // 4.0 seconds to make a copy and delete it (3.5 and .5)
+
         // sample timer
         // var startSeconds = new Date().getTime();
         // var tempFile = docFile.makeCopy(tempFolder);
@@ -252,7 +253,7 @@ function processRow(data) {
             sheet.getRange(rowNum,pdfColIndex+1).setValue('created');
         }
     } else {
-        pdfSuccess = 1;
+        pdfSuccess = true;
         sheet.getRange(rowNum,pdfColIndex+1).setValue('n/a').setHorizontalAlignment('center');
     }
 
@@ -476,6 +477,15 @@ function saveEmailBodyHtml(emailBodyHtml) {
 }
 
 function viewLargeFormat(type) {
+    if (type == 'draft') {
+        var drafts = GmailApp.getDrafts(); // Get the first draft message in your drafts folder
+        if (!drafts.length) {
+            var data = {};
+            data.success = false;
+            data.errorMessage = 'No draft emails were found';
+            return data;
+        }
+    }
     var html = HtmlService.createTemplateFromFile('largeFormat');
     html.type = type;
     html = html.evaluate().setHeight(750).setWidth(750);
