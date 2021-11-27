@@ -10,10 +10,6 @@ $('#viewLargeFormat').click(function() {
 	google.script.run.withSuccessHandler(successViewLargeFormat).viewLargeFormat(type);
 });
 
-function successViewLargeFormat() {
-	hideToast();
-}
-
 
 $('#editEmailTextBtn').click(function(){
 	$('#emailBodyText').hide();
@@ -313,12 +309,9 @@ $('#deleteSettingsLink').click(function(e) {
 		showToast();
 		google.script.run.withSuccessHandler(successDeleteDocumentProperties).deleteDocumentProperties();
 	});
-
 });
 
-function successDeleteDocumentProperties() {
-	hideToast();
-}
+
 
 $('#sendEmails').change(function(){
 
@@ -426,10 +419,13 @@ $('#mergeAndEmailBtn').click(function(e) {
 	$('#okayBtn').off('click');
 	$('#okayBtn').click(function(){
 		showToast();
+		$('#progressDiv').show();
+		$('#progressSpan').text('initializing...');
 		var emailType = $('input[name=emailType]:checked').val();
-		google.script.run.withSuccessHandler(processRow).getInitialData(emailType,formData.sendEmails);
+		google.script.run.withSuccessHandler(processRow).initialize(emailType,formData.sendEmails);
 	});
 });
+
 
 
 function processRow(data) {
@@ -457,7 +453,13 @@ function processRow(data) {
 
 	data.headers = headers;
 	data.draftBody = draftBody;
+	$('#progressSpan').text('processing row 3...');
 	google.script.run.withSuccessHandler(successProcessRow).processRow(data);
+}
+
+function successDeleteDocumentProperties() {
+
+	hideToast();
 }
 
 function successProcessRow(data){
@@ -468,10 +470,12 @@ function successProcessRow(data){
 		return;
 	}
     else if (data.remainingRows > 0) {
+    	$('#progressSpan').text('processing row ' + data.rowNum + '...');
     	google.script.run.withSuccessHandler(successProcessRow).processRow(data);
 
     } else {
     	hideToast();
+    	$('#progressDiv').hide();
     	return;
     }
 }
@@ -597,6 +601,11 @@ function successSaveEmailBodyHtml(data) {
 		$('#saveEmailHtmlBtn').hide();
 		$('#editEmailHtmlBtn').show();
 	}
+	hideToast();
+}
+
+function successViewLargeFormat() {
+
 	hideToast();
 }
 

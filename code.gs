@@ -1,177 +1,4 @@
-function openSidebar() {
-    ui = SpreadsheetApp.getUi();
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var displaySheetName = '[Display]';
-    var displaySheet = ss.getSheetByName(displaySheetName);
-
-    if (!displaySheet) {
-        var response = ui.alert('Could not find sheet named "[Display]"\nCreate sheet?', ui.ButtonSet.YES_NO);
-        if (response == ui.Button.NO) {
-            return;
-        }
-        ss.insertSheet(displaySheetName,0);
-        displaySheet = ss.getSheetByName(displaySheetName);
-        displaySheet.activate();
-        formatDisplaySheet(displaySheet);
-
-    } else {
-        displaySheet.activate();
-        var response = ui.alert('Clear and Format Display Sheet?', ui.ButtonSet.YES_NO);
-        if (response == ui.Button.YES) {
-            displaySheet.clear();
-            formatDisplaySheet(displaySheet);
-        }
-    }
-
-    var data = {};
-
-    var documentProperties = PropertiesService.getDocumentProperties();
-    data.documentTemplateUrl = documentProperties.getProperty('documentTemplateUrl');
-    data.pdfFolderUrl = documentProperties.getProperty('pdfFolderUrl');
-    data.tempFolderUrl = documentProperties.getProperty('tempFolderUrl');
-    data.pdfFileName = documentProperties.getProperty('pdfFileName');
-    data.emailToColName = documentProperties.getProperty('emailToColName');
-    data.emailSubject = documentProperties.getProperty('emailSubject');
-    data.emailBodyHtml = documentProperties.getProperty('emailBodyHtml');
-    data.emailBodyText = documentProperties.getProperty('emailBodyText');
-
-    var html = HtmlService.createTemplateFromFile('sidebar');
-    html.data = data;
-    html = html.evaluate();
-    html.setTitle("Mail Merge");
-    SpreadsheetApp.getUi().showSidebar(html);
-}
-
-function saveDocumentTemplateUrl(url) {
-    // verify that the URL is a valid drive URL
-    var data = {};
-    var fileId = getId(url);
-    if (!fileId) {
-        data.success = false;
-        data.errorMessage = "Invalid URL";
-        return data;
-    }
-    try {
-        DriveApp.getFileById(fileId);
-    } catch(e){
-        data.success = false;
-        data.errorMessage = "Template Document not found";
-        return data;
-    }
-    var documentProperties = PropertiesService.getDocumentProperties();
-    documentProperties.setProperty('documentTemplateUrl',url.trim());
-    data.success = true;
-    data.url = url;
-    return data;
-}
-
-function savePdfFolderUrl(url) {
-    // verify that the URL is a valid drive URL
-    var data = {};
-    var folderId = getId(url);
-    if (!folderId) {
-        data.success = false;
-        data.errorMessage = "Invalid URL";
-        return data;
-    }
-    try {
-        DriveApp.getFolderById(folderId);
-    } catch(e){
-        data.success = false;
-        data.errorMessage = "PDF Folder not found";
-        return data;
-    }
-    var documentProperties = PropertiesService.getDocumentProperties();
-    documentProperties.setProperty('pdfFolderUrl',url.trim());
-    data.success = true;
-    data.url = url;
-    return data;
-}
-
-function saveTempFolderUrl(url) {
-    // verify that the URL is a valid drive URL
-    var data = {};
-    var folderId = getId(url);
-    if (!folderId) {
-        data.success = false;
-        data.errorMessage = "Invalid URL";
-        return data;
-    }
-    try {
-        DriveApp.getFolderById(folderId);
-    } catch(e){
-        data.success = false;
-        data.errorMessage = ("Temp Folder not found");
-        return data;
-    }
-    var documentProperties = PropertiesService.getDocumentProperties();
-    documentProperties.setProperty('tempFolderUrl',url.trim());
-    data.success = true;
-    data.url = url;
-    return data;
-}
-
-function savePdfFileName(fileName) {
-    var data = {};
-    var documentProperties = PropertiesService.getDocumentProperties();
-    documentProperties.setProperty('pdfFileName',fileName.trim());
-    data.success = true;
-    data.fileName = fileName;
-    return data;
-}
-
-function saveEmailToColName(colName) {
-    var data = {};
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName('[Display]');
-    var headers = sheet.getDataRange().offset(1,0,1).getValues()[0]; // 1D array
-    if (!headers.includes(colName)) {
-        data.success = false;
-        data.errorMessage = "Column name not found";
-        return data;
-    }
-    var documentProperties = PropertiesService.getDocumentProperties();
-    documentProperties.setProperty('emailToColName',colName.trim());
-    data.success = true;
-    data.colName = colName;
-    return data;
-}
-
-function saveEmailSubject(subject) {
-    var data = {};
-    var documentProperties = PropertiesService.getDocumentProperties();
-    documentProperties.setProperty('emailSubject',subject.trim());
-    data.success = true;
-    data.subject = subject;
-    return data;
-}
-
-function saveEmailBodyText(emailBodyText) {
-    var documentProperties = PropertiesService.getDocumentProperties();
-    documentProperties.setProperty('emailBodyText',emailBodyText.trim());
-    data = {};
-    data.success = true;
-    data.emailBodyText = emailBodyText;
-    return data;
-}
-
-function saveEmailBodyHtml(emailBodyHtml) {
-    var documentProperties = PropertiesService.getDocumentProperties();
-    documentProperties.setProperty('emailBodyHtml',emailBodyHtml.trim());
-    data = {};
-    data.success = true;
-    data.emailBodyHtml = emailBodyHtml;
-    return data;
-}
-
-function viewLargeFormat(type) {
-    var html = HtmlService.createTemplateFromFile('largeFormat');
-    html.type = type;
-    html = html.evaluate().setHeight(750).setWidth(750);
-    SpreadsheetApp.getUi().showModalDialog(html, 'Email Body');
-}
-
-function getInitialData(emailType,sendEmails){
+function initialize(emailType,sendEmails){
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName('[Display]');
     sheet.activate();
@@ -248,6 +75,50 @@ function getInitialData(emailType,sendEmails){
     data.numRows = numRows -2;
     data.success = true;
     return data;
+}
+
+function openSidebar() {
+    ui = SpreadsheetApp.getUi();
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var displaySheetName = '[Display]';
+    var displaySheet = ss.getSheetByName(displaySheetName);
+
+    if (!displaySheet) {
+        var response = ui.alert('Could not find sheet named "[Display]"\nCreate sheet?', ui.ButtonSet.YES_NO);
+        if (response == ui.Button.NO) {
+            return;
+        }
+        ss.insertSheet(displaySheetName,0);
+        displaySheet = ss.getSheetByName(displaySheetName);
+        displaySheet.activate();
+        formatDisplaySheet(displaySheet);
+
+    } else {
+        displaySheet.activate();
+        var response = ui.alert('Clear and Format Display Sheet?', ui.ButtonSet.YES_NO);
+        if (response == ui.Button.YES) {
+            displaySheet.clear();
+            formatDisplaySheet(displaySheet);
+        }
+    }
+
+    var data = {};
+
+    var documentProperties = PropertiesService.getDocumentProperties();
+    data.documentTemplateUrl = documentProperties.getProperty('documentTemplateUrl');
+    data.pdfFolderUrl = documentProperties.getProperty('pdfFolderUrl');
+    data.tempFolderUrl = documentProperties.getProperty('tempFolderUrl');
+    data.pdfFileName = documentProperties.getProperty('pdfFileName');
+    data.emailToColName = documentProperties.getProperty('emailToColName');
+    data.emailSubject = documentProperties.getProperty('emailSubject');
+    data.emailBodyHtml = documentProperties.getProperty('emailBodyHtml');
+    data.emailBodyText = documentProperties.getProperty('emailBodyText');
+
+    var html = HtmlService.createTemplateFromFile('sidebar');
+    html.data = data;
+    html = html.evaluate();
+    html.setTitle("Mail Merge");
+    SpreadsheetApp.getUi().showSidebar(html);
 }
 
 function processRow(data) {
@@ -436,14 +307,17 @@ function processRow(data) {
                             attachments: [pdfFile],
                             htmlBody: emailBody
                         });
+                        sheet.getRange(rowNum,emailColIndex+1).setValue('sent w/ attachment').setHorizontalAlignment('center');
+                        emailSuccess = true;
 
                     } else {
                         MailApp.sendEmail(emailAddress,emailSubject,null, {
                             htmlBody: emailBody
-                      });
+                        });
+                        sheet.getRange(rowNum,emailColIndex+1).setValue('sent').setHorizontalAlignment('center');
+                        emailSuccess = true;
                     }
-                  sheet.getRange(rowNum,emailColIndex+1).setValue('sent').setHorizontalAlignment('center');
-                  emailSuccess = true;
+
 
                 } catch (error) {
                   sheet.getRange(rowNum,emailColIndex+1).setValue(error).setHorizontalAlignment('left');
@@ -478,4 +352,135 @@ function processRow(data) {
     data.rowNum ++;
     return data;
 }
+
+function saveDocumentTemplateUrl(url) {
+    // verify that the URL is a valid drive URL
+    var data = {};
+    var fileId = getId(url);
+    if (!fileId) {
+        data.success = false;
+        data.errorMessage = "Invalid URL";
+        return data;
+    }
+    try {
+        DriveApp.getFileById(fileId);
+    } catch(e){
+        data.success = false;
+        data.errorMessage = "Template Document not found";
+        return data;
+    }
+    var documentProperties = PropertiesService.getDocumentProperties();
+    documentProperties.setProperty('documentTemplateUrl',url.trim());
+    data.success = true;
+    data.url = url;
+    return data;
+}
+
+function savePdfFolderUrl(url) {
+    // verify that the URL is a valid drive URL
+    var data = {};
+    var folderId = getId(url);
+    if (!folderId) {
+        data.success = false;
+        data.errorMessage = "Invalid URL";
+        return data;
+    }
+    try {
+        DriveApp.getFolderById(folderId);
+    } catch(e){
+        data.success = false;
+        data.errorMessage = "PDF Folder not found";
+        return data;
+    }
+    var documentProperties = PropertiesService.getDocumentProperties();
+    documentProperties.setProperty('pdfFolderUrl',url.trim());
+    data.success = true;
+    data.url = url;
+    return data;
+}
+
+function saveTempFolderUrl(url) {
+    // verify that the URL is a valid drive URL
+    var data = {};
+    var folderId = getId(url);
+    if (!folderId) {
+        data.success = false;
+        data.errorMessage = "Invalid URL";
+        return data;
+    }
+    try {
+        DriveApp.getFolderById(folderId);
+    } catch(e){
+        data.success = false;
+        data.errorMessage = ("Temp Folder not found");
+        return data;
+    }
+    var documentProperties = PropertiesService.getDocumentProperties();
+    documentProperties.setProperty('tempFolderUrl',url.trim());
+    data.success = true;
+    data.url = url;
+    return data;
+}
+
+function savePdfFileName(fileName) {
+    var data = {};
+    var documentProperties = PropertiesService.getDocumentProperties();
+    documentProperties.setProperty('pdfFileName',fileName.trim());
+    data.success = true;
+    data.fileName = fileName;
+    return data;
+}
+
+function saveEmailToColName(colName) {
+    var data = {};
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName('[Display]');
+    var headers = sheet.getDataRange().offset(1,0,1).getValues()[0]; // 1D array
+    if (!headers.includes(colName)) {
+        data.success = false;
+        data.errorMessage = "Column name not found";
+        return data;
+    }
+    var documentProperties = PropertiesService.getDocumentProperties();
+    documentProperties.setProperty('emailToColName',colName.trim());
+    data.success = true;
+    data.colName = colName;
+    return data;
+}
+
+function saveEmailSubject(subject) {
+    var data = {};
+    var documentProperties = PropertiesService.getDocumentProperties();
+    documentProperties.setProperty('emailSubject',subject.trim());
+    data.success = true;
+    data.subject = subject;
+    return data;
+}
+
+function saveEmailBodyText(emailBodyText) {
+    var documentProperties = PropertiesService.getDocumentProperties();
+    documentProperties.setProperty('emailBodyText',emailBodyText.trim());
+    data = {};
+    data.success = true;
+    data.emailBodyText = emailBodyText;
+    return data;
+}
+
+function saveEmailBodyHtml(emailBodyHtml) {
+    var documentProperties = PropertiesService.getDocumentProperties();
+    documentProperties.setProperty('emailBodyHtml',emailBodyHtml.trim());
+    data = {};
+    data.success = true;
+    data.emailBodyHtml = emailBodyHtml;
+    return data;
+}
+
+function viewLargeFormat(type) {
+    var html = HtmlService.createTemplateFromFile('largeFormat');
+    html.type = type;
+    html = html.evaluate().setHeight(750).setWidth(750);
+    SpreadsheetApp.getUi().showModalDialog(html, 'Email Body');
+}
+
+
 
