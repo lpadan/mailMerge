@@ -123,6 +123,40 @@ $('#saveEmailToColNameBtn').click(function() {
 
 
 
+
+$('#cancelEmailCcColNameBtn').click(function(){
+	$(this).hide();
+	$('#editEmailCcColNameBtn').show();
+	$('#saveEmailCcColNameBtn').hide();
+	$('#emailCcColNameDiv').show();
+	$('#editEmailCcColNameDiv').hide();
+});
+
+$('#editEmailCcColNameBtn').click(function(){
+	$('#emailCcColNameDiv').hide();
+	$('#editEmailCcColNameDiv').show();
+	$('#saveEmailCcColNameBtn').show();
+	if ($('#emailCcColNameSpan').text() == '[ no column name ]') {
+		$('#editEmailCcColNameInput').focus().val('');
+	} else {
+		$('#editEmailCcColNameInput').focus().val($('#emailCcColNameSpan').text());
+	}
+	$('#editEmailCcColNameBtn').hide();
+	$('#cancelEmailCcColNameBtn').show();
+});
+
+$('#saveEmailCcColNameBtn').click(function() {
+	var colName = $('#editEmailCcColNameInput').val();
+	showToast();
+	google.script.run.withSuccessHandler(successSaveEmailCcColName).saveEmailCcColName(colName);
+});
+
+
+
+
+
+
+
 $('#cancelPdfFileNameBtn').click(function(){
 	$(this).hide();
 	$('#editPdfFileNameBtn').show();
@@ -408,9 +442,10 @@ $('#viewLargeFormat').click(function() {
 });
 
 
-
 function processFirstRow(data) {
 	if (!data.success) {
+		$('#progressSpan').text('');
+		$('#progressSpanDiv').hide();
 		alert(data.errorMessage);
 		hideToast();
 		return;
@@ -520,6 +555,24 @@ function successSaveEmailToColName(data) {
 		$('#cancelEmailToColNameBtn').hide();
 		$('#saveEmailToColNameBtn').hide();
 		$('#editEmailToColNameBtn').show();
+	} else if (!data.success) {
+		alert(data.errorMessage);
+	}
+	hideToast();
+}
+
+function successSaveEmailCcColName(data) {
+	if (data.success) {
+		if (data.colName == '[ no column name ]') {
+			$('#emailCcColNameSpan').text(data.colName).css('text-align','center');
+		} else {
+			$('#emailCcColNameSpan').text(data.colName).css('text-align','left');
+		}
+		$('#editEmailCcColNameDiv').hide();
+		$('#emailCcColNameDiv').show();
+		$('#cancelEmailCcColNameBtn').hide();
+		$('#saveEmailCcColNameBtn').hide();
+		$('#editEmailCcColNameBtn').show();
 	} else if (!data.success) {
 		alert(data.errorMessage);
 	}

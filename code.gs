@@ -106,6 +106,7 @@ function openSidebar() {
     data.tempFolderUrl = documentProperties.getProperty('tempFolderUrl');
     data.pdfFileName = documentProperties.getProperty('pdfFileName');
     data.emailToColName = documentProperties.getProperty('emailToColName');
+    data.emailCcColName = documentProperties.getProperty('emailCcColName');
     data.emailSubject = documentProperties.getProperty('emailSubject');
     data.emailBodyHtml = documentProperties.getProperty('emailBodyHtml');
     data.emailBodyText = documentProperties.getProperty('emailBodyText');
@@ -119,7 +120,7 @@ function openSidebar() {
 
 function processRow(data) {
 
-    var emailAddress,emailBody,emailColIndex,emailToIndex,emailSuccess,emailSendSuccess,headers,i,index,j,pdfFile,pdfFiles,pdfColIndex,sheet,emailSuccess,pdfSuccess,replace,re;
+    var ccIndex,emailAddress,emailBody,emailColIndex,emailToIndex,emailSuccess,emailSendSuccess,headers,i,index,j,pdfFile,pdfFiles,pdfColIndex,sheet,emailSuccess,pdfSuccess,replace,re;
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     sheet = ss.getSheetByName("[Display]");
 
@@ -169,10 +170,12 @@ function processRow(data) {
     if (sendEmails) {
         var emailType = data.emailType;
         var emailToColName = documentProperties.getProperty('emailToColName');
+        var emailCcColName = documentProperties.getProperty('emailCcColName');
         var emailSubject = documentProperties.getProperty('emailSubject');
         var emailBodyHtml = documentProperties.getProperty('emailBodyHtml');
         var emailBodyText = documentProperties.getProperty('emailBodyText');
         emailToIndex = headers.indexOf(emailToColName);
+        ccIndex = headers.indexOf(emailCcColName);
     }
 
     pdfColIndex = headers.indexOf('[ pdf ]');
@@ -302,14 +305,16 @@ function processRow(data) {
                         }
                         MailApp.sendEmail(emailAddress,emailSubject,null, {
                             attachments: [pdfFile],
-                            htmlBody: emailBody
+                            htmlBody: emailBody,
+                            cc:rowData[ccIndex]
                         });
                         sheet.getRange(rowNum,emailColIndex+1).setHorizontalAlignment('center').setValue('sent w/ attachment');
                         emailSuccess = true;
 
                     } else {
                         MailApp.sendEmail(emailAddress,emailSubject,null, {
-                            htmlBody: emailBody
+                            htmlBody: emailBody,
+                            cc:rowData[ccIndex]
                         });
                         sheet.getRange(rowNum,emailColIndex+1).setHorizontalAlignment('center').setValue('sent');
                         emailSuccess = true;
@@ -445,6 +450,28 @@ function saveEmailToColName(colName) {
     return data;
 }
 
+function saveEmailCcColName(colName='') {
+    var data = {};
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName('[Display]');
+    var headers = sheet.getDataRange().offset(0,0,1).getValues()[0]; // 1D array
+    if (colName && !headers.includes(colName)) {
+        data.success = false;
+        data.errorMessage = "Column name not found";
+        return data;
+    }
+    var documentProperties = PropertiesService.getDocumentProperties();
+    documentProperties.setProperty('emailCcColName',colName.trim());
+    data.success = true;
+
+    if (!colName) {
+        data.colName = '[ no column name ]';
+    } else {
+        data.colName = colName;
+    }
+    return data;
+}
+
 function saveEmailSubject(subject) {
     var data = {};
     var documentProperties = PropertiesService.getDocumentProperties();
@@ -487,6 +514,3 @@ function viewLargeFormat(type) {
     html = html.evaluate().setHeight(750).setWidth(750);
     SpreadsheetApp.getUi().showModalDialog(html, 'Email Body');
 }
-
-
-

@@ -1,22 +1,14 @@
 <?
-
 var documentTemplateUrl = data.documentTemplateUrl;
 var pdfFolderUrl = data.pdfFolderUrl;
 var tempFolderUrl = data.tempFolderUrl;
 var pdfFileName = data.pdfFileName;
 var emailToColName = data.emailToColName;
+var emailCcColName = data.emailCcColName;
 var emailSubject = data.emailSubject;
 var emailBodyHtml = data.emailBodyHtml;
 var emailBodyText = data.emailBodyText;
-
-//if (emailBodyHtml && emailBodyHtml.length) var type = 'html';
-if (emailBodyText && emailBodyText.length) {
-	var emailBody = emailBodyText.replace(/\n/g,"<br>");
-	//var type = 'text';
-} else {
-	//var type = 'text';
-}
-
+if (emailBodyText && emailBodyText.length) var emailBody = emailBodyText.replace(/\n/g,"<br>");
 ?>
 
 
@@ -260,7 +252,7 @@ if (emailBodyText && emailBodyText.length) {
 
 	<div style="padding:0 15px">
 
-		<h5>Recipient Email (col name)</h5>
+		<h5>To: (column name)</h5>
 		<div class="shadowBox">
 
 			<div id="emailToColNameDiv" style="margin-top:20px;width:100%">
@@ -284,6 +276,33 @@ if (emailBodyText && emailBodyText.length) {
 				<button id="editEmailToColNameBtn" class="waves-effect waves-light btn btn-small">Edit</button>
 				<button id="cancelEmailToColNameBtn" class="btn btn-flat" style="display:none">Cancel</button>
 				<button id="saveEmailToColNameBtn" class="waves-effect waves-light btn btn-small" style="display:none">Save</button>
+			</div>
+		</div>
+
+		<h5 style="margin-top:30px">cc: (column name)</h5>
+		<div class="shadowBox">
+
+			<div id="emailCcColNameDiv" style="margin-top:20px;width:100%">
+
+				<?
+
+				if (!emailCcColName) { ?>
+					<span id="emailCcColNameSpan" style="margin-bottom: 5px;background-color: #f3f3f3;padding: 10px;line-height: 16px;height: 36px;text-align: center;overflow:scroll;display:block;font-size:16px;width:100%;white-space:nowrap;height:35px">[ no column name ]</span><?
+				} else { ?>
+					<span id="emailCcColNameSpan" style="margin-bottom: 5px;background-color: #f3f3f3;padding: 10px;line-height: 16px;height: 36px;overflow:scroll;display:block;font-size:16px;width:100%;white-space:nowrap;height:35px"><?=emailCcColName;?></span><?
+				} ?>
+
+			</div>
+
+			<div id="editEmailCcColNameDiv" class="input-field" style="margin-top:20px;display:none">
+				<input id="editEmailCcColNameInput" name="editEmailCcColNameInput" type="text">
+				<label for="editEmailCcColNameInput">column name</label>
+			</div>
+
+			<div style="margin-top: 10px;text-align:center">
+				<button id="editEmailCcColNameBtn" class="waves-effect waves-light btn btn-small">Edit</button>
+				<button id="cancelEmailCcColNameBtn" class="btn btn-flat" style="display:none">Cancel</button>
+				<button id="saveEmailCcColNameBtn" class="waves-effect waves-light btn btn-small" style="display:none">Save</button>
 			</div>
 		</div>
 
@@ -395,7 +414,6 @@ if (emailBodyText && emailBodyText.length) {
 					<button id="saveEmailHtmlBtn" class="waves-effect waves-light btn btn-small" style="display:none">Save</button>
 				</div>
 			</div>
-
 		</div>
 		<br>
 
