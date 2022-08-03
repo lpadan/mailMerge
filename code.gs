@@ -1,3 +1,10 @@
+function clearDataValidations(sheet) {
+    var maxRows = sheet.getMaxRows();
+    var maxCols = sheet.getMaxColumns();
+    var range = sheet.getRange(1,1,maxRows,maxCols);
+    range.clearDataValidations();
+}
+
 function initialize(emailType,sendEmails){
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName('[Display]');
@@ -70,7 +77,7 @@ function initialize(emailType,sendEmails){
     }
 
     data.headers = headers;
-    data.numRows = numRows -2;
+    data.numRows = numRows - 1;
     data.success = true;
     return data;
 }
@@ -79,24 +86,29 @@ function openSidebar() {
     ui = SpreadsheetApp.getUi();
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var displaySheetName = '[Display]';
-    var displaySheet = ss.getSheetByName(displaySheetName);
+    var sheet = ss.getSheetByName(displaySheetName);
 
-    if (!displaySheet) {
+    if (!sheet) {
         var response = ui.alert('Could not find sheet named [Display]\nCreate sheet?', ui.ButtonSet.YES_NO);
         if (response == ui.Button.NO) {
             return;
         }
         ss.insertSheet(displaySheetName,0);
-        displaySheet = ss.getSheetByName(displaySheetName);
-        displaySheet.activate();
+        sheet = ss.getSheetByName(displaySheetName);
+        sheet.activate();
 
     } else {
-        displaySheet.activate();
+        sheet.activate();
         var response = ui.alert('Clear [Display] Sheet?', ui.ButtonSet.YES_NO);
         if (response == ui.Button.YES) {
-            displaySheet.clear();
+            sheet.clear();
         }
     }
+
+    sheet.setHiddenGridlines(false);
+    sheet.setFrozenRows(0);
+    sheet.setFrozenColumns(0);
+    clearDataValidations(sheet);
 
     var data = {};
 
@@ -226,6 +238,8 @@ function processRow(data) {
             pdfFileName = pdfFileName.replace("{" + headers[j] + "}", rowData[j]);
         }
 
+        if (pdfFileName.slice(-4) != ".pdf") pdfFileName += ".pdf";
+
         var pdfContentBlob = tempDocFile.getAs(MimeType.PDF); // avg duration .1 seconds
         tempDocFile.saveAndClose();
 
@@ -303,19 +317,35 @@ function processRow(data) {
                             pdfFile = pdfContentBlob;
                             pdfSuccess = true;
                         }
-                        MailApp.sendEmail(emailAddress,emailSubject,null, {
-                            attachments: [pdfFile],
-                            htmlBody: emailBody,
-                            cc:rowData[ccIndex]
-                        });
+
+                        if (ccIndex > -1) {
+                            MailApp.sendEmail(emailAddress,emailSubject,null, {
+                                attachments: [pdfFile],
+                                htmlBody: emailBody,
+                                cc:rowData[ccIndex]
+                            });
+                        } else {
+                            MailApp.sendEmail(emailAddress,emailSubject,null, {
+                                attachments: [pdfFile],
+                                htmlBody: emailBody
+                            });
+                        }
+
                         sheet.getRange(rowNum,emailColIndex+1).setHorizontalAlignment('center').setValue('sent w/ attachment');
                         emailSuccess = true;
 
                     } else {
-                        MailApp.sendEmail(emailAddress,emailSubject,null, {
-                            htmlBody: emailBody,
-                            cc:rowData[ccIndex]
-                        });
+                        if (ccIndex > -1) {
+                            MailApp.sendEmail(emailAddress,emailSubject,null, {
+                                htmlBody: emailBody,
+                                cc:rowData[ccIndex]
+                            });
+                        } else {
+                            MailApp.sendEmail(emailAddress,emailSubject,null, {
+                                htmlBody: emailBody,
+                            });
+                        }
+
                         sheet.getRange(rowNum,emailColIndex+1).setHorizontalAlignment('center').setValue('sent');
                         emailSuccess = true;
                     }
@@ -343,10 +373,25 @@ function processRow(data) {
     }
 
     if (createPdfFiles) {
-        // moved to here due to erros in creating the PDF file...TEST
-        // only way to truly delete a file.  DriveApp.remove() simply removes its parent folder
-        // optionally can setTrashed() and it goes in the trash for 30 days.  Might be less expensive, haven't checked
-        Drive.Files.remove(tempFile.getId()); // avg duration .5 seconds
+        // moved the delete function to here
+        // after the PDF file is created, the temp file may be deleted
+        // returned periodic errors when this code was placed immeidately after the creation of the PDF code
+        // likely a bug where the create PDF method returns before the file is finished being created
+        // and if so, the delete function fails
+
+        // the only way to truly delete a file is Drive.Files.remove().  DriveApp.remove() simply removes its parent folder
+        // optionally can setTrashed() = true and it goes in the trash for 30 days
+        try {
+            // NOTE
+            // if the Temp folder is on a shared drive, only a Manager can permanently delete files and bi-pass the Trash
+            // which is what Drive.remove() does.
+            // we can't guarantee that a user is a "Manager", and must catch the error and terminate.
+            Drive.Files.remove(tempFile.getId()); // avg duration .5 seconds
+        } catch (error) {
+            data.success = false;
+            data.errorMessage = "There was an error deleting the Temp file. Check folder permissions and verify that the Temp folder is not on a Shared Drive. Process terminated."
+            return data;
+        }
     }
 
     data.success = true;

@@ -445,7 +445,7 @@ $('#viewLargeFormat').click(function() {
 function processFirstRow(data) {
 	if (!data.success) {
 		$('#progressSpan').text('');
-		$('#progressSpanDiv').hide();
+		$('#progressDiv').hide();
 		alert(data.errorMessage);
 		hideToast();
 		return;
@@ -478,6 +478,8 @@ function successDeleteDocumentProperties() {
 
 function successProcessRow(data){
     if (!data.success) {
+		$('#progressSpan').text('');
+		$('#progressDiv').hide();
 		alert(data.errorMessage);
 		hideToast();
 		return;

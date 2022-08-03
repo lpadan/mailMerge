@@ -4,7 +4,6 @@ function testRunTime(timesRun=0) {
     if (timesRun > 0) console.log(`ran ${timesRun} times`);
     Utilities.sleep(5000);
     testRunTime(timesRun + 1);
-
 }
 
 function getId(Url) {
